@@ -31,6 +31,10 @@ SOFTWARE.
 #include <sys/time.h>
 #include "event_gpio.h"
 
+#ifndef BPI
+#define BPI
+#endif
+
 const char *stredge[4] = {"none", "rising", "falling", "both"};
 
 struct gpios
@@ -67,7 +71,11 @@ int epfd_blocking = -1;
 int gpio_export(unsigned int gpio)
 {
     int fd, len;
+#ifdef BPI	
+    char str_gpio[4];
+#else
     char str_gpio[3];
+#endif	
 
     if ((fd = open("/sys/class/gpio/export", O_WRONLY)) < 0)
        return -1;
@@ -82,7 +90,11 @@ int gpio_export(unsigned int gpio)
 int gpio_unexport(unsigned int gpio)
 {
     int fd, len;
+#ifdef BPI	
+    char str_gpio[4];
+#else
     char str_gpio[3];
+#endif	
 
     if ((fd = open("/sys/class/gpio/unexport", O_WRONLY)) < 0)
         return -1;
@@ -99,7 +111,11 @@ int gpio_set_direction(unsigned int gpio, unsigned int in_flag)
     int retry;
     struct timespec delay;
     int fd;
+#ifdef BPI	
+    char filename[34];
+#else
     char filename[33];
+#endif	
 
     snprintf(filename, sizeof(filename), "/sys/class/gpio/gpio%d/direction", gpio);
 
@@ -126,7 +142,11 @@ int gpio_set_direction(unsigned int gpio, unsigned int in_flag)
 int gpio_set_edge(unsigned int gpio, unsigned int edge)
 {
     int fd;
+#ifdef BPI	
+    char filename[29];
+#else
     char filename[28];
+#endif
 
     snprintf(filename, sizeof(filename), "/sys/class/gpio/gpio%d/edge", gpio);
 
@@ -141,7 +161,11 @@ int gpio_set_edge(unsigned int gpio, unsigned int edge)
 int open_value_file(unsigned int gpio)
 {
     int fd;
+#ifdef BPI	
+    char filename[30];
+#else
     char filename[29];
+#endif
 
     // create file descriptor of value file
     snprintf(filename, sizeof(filename), "/sys/class/gpio/gpio%d/value", gpio);

@@ -32,6 +32,18 @@ void set_low_event(int gpio, int enable);
 int eventdetected(int gpio);
 void cleanup(void);
 
+#ifndef BPI
+#define BPI
+#endif
+
+#ifdef BPI
+int sunxi_setup(void);
+void sunxi_setup_gpio(int gpio, int direction, int pud);
+int sunxi_gpio_function(int gpio);
+void sunxi_output_gpio(int gpio, int value);
+int sunxi_input_gpio(int gpio);
+#endif
+
 #define SETUP_OK           0
 #define SETUP_DEVMEM_FAIL  1
 #define SETUP_MALLOC_FAIL  2

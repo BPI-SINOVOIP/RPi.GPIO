@@ -28,6 +28,14 @@ SOFTWARE.
 #include "constants.h"
 #include "common.h"
 
+#ifndef BPI
+#define BPI
+#endif
+
+#ifdef BPI
+extern int bpi_found;
+#endif
+
 static PyObject *rpi_revision; // deprecated
 static PyObject *board_info;
 static int gpio_warnings = 1;

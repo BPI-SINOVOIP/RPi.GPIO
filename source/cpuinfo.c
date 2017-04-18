@@ -25,6 +25,15 @@ SOFTWARE.
 #include <string.h>
 #include "cpuinfo.h"
 
+#ifndef BPI
+#define BPI
+#endif
+
+#ifdef BPI
+extern int bpi_found;
+extern int bpi_get_rpi_info();
+#endif
+
 int get_rpi_info(rpi_info *info)
 {
    FILE *fp;
@@ -34,6 +43,14 @@ int get_rpi_info(rpi_info *info)
    char *rev;
    int found = 0;
    int len;
+
+#ifdef BPI
+   if (bpi_found != 0) {
+     bpi_get_rpi_info(info);
+     if (bpi_found == 1)
+       return 0;
+   }
+#endif
 
    if ((fp = fopen("/proc/cpuinfo", "r")) == NULL)
       return -1;
