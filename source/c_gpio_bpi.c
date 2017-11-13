@@ -146,6 +146,7 @@ char *piModelNames [64] =
   "Banana Pi M2+[H2+]",	// 30
   "Banana Pi M2+[H5]",	// 31
   "Banana Pi M2 Ultra[V40]",	// 32
+  "Banana Pi M2 Zero[H2+/H3]",	// 33
   NULL,
 #endif
 } ;
@@ -264,6 +265,7 @@ struct BPIBoards bpiboard [] =
   { "bpi-m2p_H2+", 10701, 30, 1, 2, 5, 0, pinToGpio_BPI_M2P, physToGpio_BPI_M2P, pinTobcm_BPI_M2P 	},
   { "bpi-m2p_H5",  10801, 31, 1, 2, 5, 0, pinToGpio_BPI_M2P, physToGpio_BPI_M2P, pinTobcm_BPI_M2P 	},
   { "bpi-m2u_V40", 10901, 32, 1, 3, 5, 0, pinToGpio_BPI_M2U, physToGpio_BPI_M2U, pinTobcm_BPI_M2U 	},
+  { "bpi-m2z",	   11001, 33, 1, 1, 5, 0, pinToGpio_BPI_M2P, physToGpio_BPI_M2P, pinTobcm_BPI_M2P 	},
   { NULL,		0, 0, 1, 2, 5, 0, NULL, NULL, NULL 	},
 } ;
 
