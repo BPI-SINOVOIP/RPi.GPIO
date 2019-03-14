@@ -54,6 +54,7 @@ static volatile uint32_t *gpio_map;
 
 #ifdef BPI
 extern int bpi_found;
+extern int bpi_found_mtk;
 extern int *pinTobcm_BP ;
 #endif
 
@@ -80,7 +81,10 @@ int setup(void)
 
 #ifdef BPI
     if( bpi_found == 1 ) {
-        return sunxi_setup();
+	if( bpi_found_mtk == 1){
+            return mtk_setup();
+	}
+	return sunxi_setup();
     }
 #endif
     // try /dev/gpiomem first - this does not require root privs

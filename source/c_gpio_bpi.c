@@ -68,6 +68,13 @@ static volatile uint32_t *gpio_map;
 #define MAP_SIZE        (4096*2)
 #define MAP_MASK        (MAP_SIZE - 1)
 
+#define MTK_GPIO_BASE				0x10005000
+#define MTK_GPIO_DIR_OFFSET		0x00
+#define MTK_GPIO_PULLE_OFFSET 		0x150
+#define MTK_GPIO_DOUT				0x500
+#define MTK_GPIO_DIN				0x630
+#define MTK_GPIO_MODE				0x760
+
 typedef struct sunxi_gpio {
     unsigned int CFG[4];
     unsigned int DAT;
@@ -102,6 +109,7 @@ static volatile uint32_t *pio_map;
 static volatile uint32_t *r_pio_map;
 
 int bpi_found=-1;
+int bpi_found_mtk = 0;
 
 int *pinToGpio_BP ;
 int *physToGpio_BP ;
@@ -270,6 +278,39 @@ struct BPIBoards bpiboard [] =
   { "bpi-r2",      11101, 34, 1, 1, 5, 0, pinToGpio_BPI_R2,  physToGpio_BPI_R2,  pinTobcm_BPI_R2    },
   { NULL,		0, 0, 1, 2, 5, 0, NULL, NULL, NULL 	},
 } ;
+
+int mtk_setup(void)
+{
+    int mem_fd;
+    uint8_t *gpio_mem;
+    uint8_t *r_gpio_mem;
+    uint32_t peri_base;
+    uint32_t gpio_base;
+    unsigned char buf[4];
+    FILE *fp;
+    char buffer[1024];
+    char hardware[1024];
+    int found = 0;
+
+// mmap the GPIO memory registers
+    if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0)
+        return SETUP_DEVMEM_FAIL;
+
+    if ((gpio_mem = malloc(BLOCK_SIZE + (PAGE_SIZE-1))) == NULL)
+        return SETUP_MALLOC_FAIL;
+
+    if ((uint32_t)gpio_mem % PAGE_SIZE)
+        gpio_mem += PAGE_SIZE - ((uint32_t)gpio_mem % PAGE_SIZE);
+
+    gpio_map = (uint32_t *)mmap( (caddr_t)gpio_mem, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_FIXED, mem_fd, MTK_GPIO_BASE);
+    pio_map = gpio_map + (SUNXI_GPIO_REG_OFFSET>>2);
+
+    if ((uint32_t)gpio_map < 0)
+        return SETUP_MMAP_FAIL;
+
+    return SETUP_OK;
+
+}
 
 
 uint32_t sunxi_readl(volatile uint32_t *addr)
@@ -490,12 +531,23 @@ int bpi_get_rpi_info(rpi_info *info)
     //printf("BPI: name[%s] gpioLayout(%d)\n",board->name, gpioLayout);
     sprintf(ram, "%dMB", piMemorySize [board->mem]);
     sprintf(type, "%s", piModelNames [board->model]);
+     //add by jackzeng
+     //jude mtk platform
+    if(strcmp(type, "Banana Pi R2[MT7623]") == 0){
+        bpi_found_mtk = 1;
+	printf("found mtk board\n");
+    }
     sprintf(manufacturer, "%s", piMakerNames [board->maker]);
     info->p1_revision = 3;
     info->type = type;
     info->ram  = ram;
     info->manufacturer = manufacturer;
-    info->processor = "Allwinner";
+    if(bpi_found_mtk == 1){
+        info->processor = "MTK";
+    }else{
+	info->processor = "Allwinner";
+    }
+    
     strcpy(info->revision, "4001");
 //    pin_to_gpio =  board->physToGpio ;
     pinToGpio_BP =  board->pinToGpio ;
