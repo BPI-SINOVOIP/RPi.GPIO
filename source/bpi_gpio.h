@@ -352,6 +352,37 @@ SOFTWARE.
 #define GPIO_PM30	30 + GPIO_PM00
 #define GPIO_PM31	31 + GPIO_PM00
 
+
+#define MTK_GPIO_BASE 232
+#define MTK_GPIO_18   18  + MTK_GPIO_BASE
+#define MTK_GPIO_19   19  + MTK_GPIO_BASE
+#define MTK_GPIO_20   20  + MTK_GPIO_BASE
+#define MTK_GPIO_21   21  + MTK_GPIO_BASE
+#define MTK_GPIO_22   22  + MTK_GPIO_BASE
+#define MTK_GPIO_24   24  + MTK_GPIO_BASE
+#define MTK_GPIO_25   25  + MTK_GPIO_BASE
+#define MTK_GPIO_49   49  + MTK_GPIO_BASE
+#define MTK_GPIO_53   53  + MTK_GPIO_BASE
+#define MTK_GPIO_54   54  + MTK_GPIO_BASE
+#define MTK_GPIO_55   55  + MTK_GPIO_BASE
+#define MTK_GPIO_56   56  + MTK_GPIO_BASE
+#define MTK_GPIO_57   57  + MTK_GPIO_BASE
+#define MTK_GPIO_58   58  + MTK_GPIO_BASE
+#define MTK_GPIO_72   72  + MTK_GPIO_BASE
+#define MTK_GPIO_73   73  + MTK_GPIO_BASE
+#define MTK_GPIO_74   74  + MTK_GPIO_BASE
+#define MTK_GPIO_75   75  + MTK_GPIO_BASE
+#define MTK_GPIO_76   76  + MTK_GPIO_BASE
+#define MTK_GPIO_79   79  + MTK_GPIO_BASE
+#define MTK_GPIO_80   80  + MTK_GPIO_BASE
+#define MTK_GPIO_81   81  + MTK_GPIO_BASE
+#define MTK_GPIO_82   82  + MTK_GPIO_BASE
+#define MTK_GPIO_126  126 + MTK_GPIO_BASE
+#define MTK_GPIO_200  200 + MTK_GPIO_BASE
+#define MTK_GPIO_202  202 + MTK_GPIO_BASE
+#define MTK_GPIO_205  205 + MTK_GPIO_BASE
+#define MTK_GPIO_206  206 + MTK_GPIO_BASE
+
 #if 0 //BPI-M2P
 #define	BPIPIN_01	-1
 #define	BPIPIN_03	GPIO_PA12
@@ -745,5 +776,6 @@ const int physToGpio_BP [64] =
 #include "bpi-m2m.h"
 #include "bpi-m3.h"
 #include "bpi-m64.h"
+#include "bpi-r2.h"
 #endif
 
