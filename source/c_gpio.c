@@ -284,7 +284,12 @@ void setup_gpio(int gpio, int direction, int pud)
 #ifdef BPI
     if( bpi_found == 1 ) {
         gpio = *(pinTobcm_BP + gpio);
-        return sunxi_setup_gpio(gpio, direction, pud);
+	if(bpi_found_mtk == 1){
+		return;
+	}else{
+		return sunxi_setup_gpio(gpio, direction, pud);
+	}
+        
     }
     else {
 #endif
@@ -307,7 +312,12 @@ int gpio_function(int gpio)
 #ifdef BPI
     if( bpi_found == 1 ) {
        gpio = *(pinTobcm_BP + gpio);
-       return sunxi_gpio_function(gpio);
+	if(bpi_found_mtk == 1){
+		return;
+	}else{
+		return sunxi_gpio_function(gpio);
+	}
+       
     }
     else {
 #endif
@@ -329,8 +339,14 @@ void output_gpio(int gpio, int value)
 
 #ifdef BPI
     if ( bpi_found == 1)  {
-       gpio = *(pinTobcm_BP + gpio);
-       sunxi_output_gpio(gpio, value);
+	printf("gpio = %d, value = %d\n", gpio, value);
+	gpio = *(pinTobcm_BP + gpio);
+	printf("gpio = %d, value = %d\n", gpio, value);
+	if(bpi_found_mtk ==  1){
+		mtk_set_gpio_out(gpio, value);
+	}else{
+	       sunxi_output_gpio(gpio, value);
+	}
        return;
     }
 #endif	
