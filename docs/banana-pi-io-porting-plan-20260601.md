@@ -123,7 +123,7 @@ The supported IO surface is:
 | BPI-M4 Super | RK3568 | done | Added M4 Super aliases/model detection using the existing RK3568 Rockchip GPIO v2 mmap backend. The 40-pin map is from the official Banana Pi M4 Super GPIO table plus Armbian `rk3568-armsom-sige3`. Basic GPIO input/output/read/write extension build-tested; pull remains no-op pending RK3568 GRF pinctrl hardware validation. |
 | BPI-M1 Super | RK3528 | done | Added RK3528 selection to the Rockchip GPIO v2 mmap backend and M1 Super aliases/model detection. The 40-pin map is from the ArmSoM Sige1-compatible official table plus Armbian `rk3528-armsom-sige1`; this avoids malformed GPIO number cells seen in the Banana Pi BPI-M1S page. Basic GPIO input/output/read/write extension build-tested; pull remains no-op pending RK3528 GRF pinctrl hardware validation. |
 | BPI-Forge1 | RK3506J | done | Added RK3506 selection to the Rockchip GPIO v2 mmap backend and Forge1 aliases/model detection. The 40-pin map is compatible with the M1 Super/Sige1 map and comes from the official Banana Pi Forge1 GPIO table plus Armbian `rk3506b-armsom-forge1`. Basic GPIO input/output/read/write extension build-tested; pull remains no-op pending RK3506 GRF pinctrl hardware validation. |
-| BPI-P2 Pro | RK3308 | todo | Needs RK3308 backend review and a limited 40-pin policy because the official 40-pin header exposes GPIO only on part of the header and uses audio/mic signals on the rest. |
+| BPI-P2 Pro | RK3308 | done | Added RK3308 Rockchip GPIO v1 mmap backend using kernel/U-Boot v1 offsets (`DR=0x00`, `DDR=0x04`, `EXT=0x50`) and GPIO bank bases from Armbian `rk3308-bpi-p2-pro`. The 40-pin map is deliberately limited to official GPIO-capable pins 5-18; power/GND/ADC/audio/mic pins remain non-GPIO. Pull control remains no-op pending RK3308 pinctrl hardware validation. |
 
 ### Batch D: vendor or WIP boards
 
@@ -146,11 +146,11 @@ The supported IO surface is:
 
 ## Current Next Item
 
-Continue Batch C from `BPI-P2 Pro`.
+Continue Batch D from `BPI-W2 / BPI-M4 plain`.
 
 Resume sequence:
 
-1. Confirm exact RK3308 GPIO backend and limited 40-pin policy for `BPI-P2 Pro`.
+1. Confirm Realtek RTD129x/RTD139x GPIO access policy for `BPI-W2 / BPI-M4 plain`.
 2. Add one board or exact carrier alias set at a time in `BPI-WiringPi2`,
    build-test, commit, and push.
 3. Add the same board in this repo, build-test, commit, and push.

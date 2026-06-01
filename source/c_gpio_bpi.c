@@ -90,7 +90,8 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_M4SUPER    93
 #define BPI_MODEL_M1SUPER    94
 #define BPI_MODEL_FORGE1     95
-#define BPI_MODELS_MAX       96
+#define BPI_MODEL_P2PRO      96
+#define BPI_MODELS_MAX       97
 
 #define BPI_MAKER_SINOVOIP    6
 
@@ -215,15 +216,19 @@ static volatile uint32_t *gpio_map;
 #define ROCKCHIP_GPIO_BANKS			5
 #define ROCKCHIP_GPIO_PIN_BASE			0
 #define ROCKCHIP_GPIO_PIN_END			159
+#define ROCKCHIP_GPIO_MAP_SIZE_RK3308		0x100
 #define ROCKCHIP_GPIO_MAP_SIZE_RK3568		0x100
 #define ROCKCHIP_GPIO_MAP_SIZE_RK3528		0x200
 #define ROCKCHIP_GPIO_MAP_SIZE_RK3506		0x200
 #define ROCKCHIP_GPIO_MAP_SIZE_RK3576		0x200
 #define ROCKCHIP_GPIO_MAP_SIZE_RK3588		0x100
 
-#define ROCKCHIP_GPIO_SWPORT_DR		0x00
-#define ROCKCHIP_GPIO_SWPORT_DDR		0x08
-#define ROCKCHIP_GPIO_EXT_PORT			0x70
+#define ROCKCHIP_GPIO_SWPORT_DR_V1		0x00
+#define ROCKCHIP_GPIO_SWPORT_DDR_V1		0x04
+#define ROCKCHIP_GPIO_EXT_PORT_V1		0x50
+#define ROCKCHIP_GPIO_SWPORT_DR_V2		0x00
+#define ROCKCHIP_GPIO_SWPORT_DDR_V2		0x08
+#define ROCKCHIP_GPIO_EXT_PORT_V2		0x70
 
 typedef struct sunxi_gpio {
     unsigned int CFG[4];
@@ -276,6 +281,13 @@ static volatile uint32_t *spacemit_gpio_map;
 static volatile uint32_t *spacemit_pinctrl_map;
 static volatile uint32_t *renesas_gpio_map;
 static volatile uint32_t *rockchip_gpio_map[ROCKCHIP_GPIO_BANKS] = { NULL };
+static const off_t rockchip_gpio_base_rk3308[ROCKCHIP_GPIO_BANKS] = {
+  0xff220000,
+  0xff230000,
+  0xff240000,
+  0xff250000,
+  0xff260000,
+};
 static const off_t rockchip_gpio_base_rk3568[ROCKCHIP_GPIO_BANKS] = {
   0xfdd60000,
   0xfe740000,
@@ -313,6 +325,10 @@ static const off_t rockchip_gpio_base_rk3588[ROCKCHIP_GPIO_BANKS] = {
 };
 static const off_t *rockchip_gpio_base = rockchip_gpio_base_rk3568;
 static size_t rockchip_gpio_map_size = ROCKCHIP_GPIO_MAP_SIZE_RK3568;
+static int rockchip_gpio_v2 = 1;
+static int rockchip_gpio_swport_dr = ROCKCHIP_GPIO_SWPORT_DR_V2;
+static int rockchip_gpio_swport_ddr = ROCKCHIP_GPIO_SWPORT_DDR_V2;
+static int rockchip_gpio_ext_port = ROCKCHIP_GPIO_EXT_PORT_V2;
 
 char *piModelNames [BPI_MODELS_MAX] =
 {
@@ -359,6 +375,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_M4SUPER] = "Banana Pi M4 Super[RK3568]",
   [BPI_MODEL_M1SUPER] = "Banana Pi M1 Super[RK3528]",
   [BPI_MODEL_FORGE1]  = "Banana Pi Forge1[RK3506J]",
+  [BPI_MODEL_P2PRO]   = "Banana Pi P2 Pro[RK3308]",
 } ;
 
 char *piRevisionNames [16] =
@@ -600,6 +617,13 @@ struct BPIBoards bpiboard [] =
   { "banana-pi-forge1", 12801, BPI_MODEL_FORGE1, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M1SUPER, physToGpio_BPI_M1SUPER, pinTobcm_BPI_M1SUPER 	},
   { "bananapi-forge1", 12801, BPI_MODEL_FORGE1, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M1SUPER, physToGpio_BPI_M1SUPER, pinTobcm_BPI_M1SUPER 	},
   { "armsom-forge1", 12801, BPI_MODEL_FORGE1, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M1SUPER, physToGpio_BPI_M1SUPER, pinTobcm_BPI_M1SUPER 	},
+  { "bpi-p2pro",   12901, BPI_MODEL_P2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_P2PRO, physToGpio_BPI_P2PRO, pinTobcm_BPI_P2PRO 	},
+  { "bpi-p2-pro",  12901, BPI_MODEL_P2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_P2PRO, physToGpio_BPI_P2PRO, pinTobcm_BPI_P2PRO 	},
+  { "bananapip2pro", 12901, BPI_MODEL_P2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_P2PRO, physToGpio_BPI_P2PRO, pinTobcm_BPI_P2PRO 	},
+  { "bananapi-p2pro", 12901, BPI_MODEL_P2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_P2PRO, physToGpio_BPI_P2PRO, pinTobcm_BPI_P2PRO 	},
+  { "bananapi-p2-pro", 12901, BPI_MODEL_P2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_P2PRO, physToGpio_BPI_P2PRO, pinTobcm_BPI_P2PRO 	},
+  { "banana-pi-p2-pro", 12901, BPI_MODEL_P2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_P2PRO, physToGpio_BPI_P2PRO, pinTobcm_BPI_P2PRO 	},
+  { "armsom-p2pro", 12901, BPI_MODEL_P2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_P2PRO, physToGpio_BPI_P2PRO, pinTobcm_BPI_P2PRO 	},
   { "bpi-r2",      11101, BPI_MODEL_R2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2,  physToGpio_BPI_R2,  pinTobcm_BPI_R2    },
   { NULL,		0, 0, 1, 2, BPI_MAKER_SINOVOIP, 0, NULL, NULL, NULL 	},
 } ;
@@ -630,6 +654,11 @@ static int bpi_model_is_rk3506(int model)
   return model == BPI_MODEL_FORGE1;
 }
 
+static int bpi_model_is_rk3308(int model)
+{
+  return model == BPI_MODEL_P2PRO;
+}
+
 static int bpi_model_is_rk3588(int model)
 {
   return model == BPI_MODEL_M7 ||
@@ -641,14 +670,40 @@ static int bpi_model_is_rockchip(int model)
 {
   return model == BPI_MODEL_R2PRO ||
       model == BPI_MODEL_M4SUPER ||
+      bpi_model_is_rk3308(model) ||
       bpi_model_is_rk3506(model) ||
       bpi_model_is_rk3528(model) ||
       bpi_model_is_rk3576(model) ||
       bpi_model_is_rk3588(model);
 }
 
+static void rockchip_select_gpio_v1_regs(void)
+{
+  rockchip_gpio_v2 = 0;
+  rockchip_gpio_swport_dr = ROCKCHIP_GPIO_SWPORT_DR_V1;
+  rockchip_gpio_swport_ddr = ROCKCHIP_GPIO_SWPORT_DDR_V1;
+  rockchip_gpio_ext_port = ROCKCHIP_GPIO_EXT_PORT_V1;
+}
+
+static void rockchip_select_gpio_v2_regs(void)
+{
+  rockchip_gpio_v2 = 1;
+  rockchip_gpio_swport_dr = ROCKCHIP_GPIO_SWPORT_DR_V2;
+  rockchip_gpio_swport_ddr = ROCKCHIP_GPIO_SWPORT_DDR_V2;
+  rockchip_gpio_ext_port = ROCKCHIP_GPIO_EXT_PORT_V2;
+}
+
 static void bpi_select_rockchip_backend(int model)
 {
+  rockchip_select_gpio_v2_regs();
+
+  if (bpi_model_is_rk3308(model)) {
+    rockchip_gpio_base = rockchip_gpio_base_rk3308;
+    rockchip_gpio_map_size = ROCKCHIP_GPIO_MAP_SIZE_RK3308;
+    rockchip_select_gpio_v1_regs();
+    return;
+  }
+
   if (bpi_model_is_rk3506(model)) {
     rockchip_gpio_base = rockchip_gpio_base_rk3506;
     rockchip_gpio_map_size = ROCKCHIP_GPIO_MAP_SIZE_RK3506;
@@ -797,6 +852,18 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "rockchip,rk3506j-armsom-forge1") ||
       strstr(hardware, "rk3506b-armsom-forge1"))
     return bpi_find_board_by_name("bpi-forge1");
+
+  if (strstr(hardware, "Banana Pi BPI-P2 Pro") ||
+      strstr(hardware, "BananaPi BPI-P2 Pro") ||
+      strstr(hardware, "Banana Pi P2 Pro") ||
+      strstr(hardware, "BananaPi P2 Pro") ||
+      strstr(hardware, "BPI-P2 Pro") ||
+      strstr(hardware, "ArmSom P2 Pro") ||
+      strstr(hardware, "ArmSoM P2 Pro") ||
+      strstr(hardware, "armsom,p2pro") ||
+      strstr(hardware, "sinovoip,rk3308-bpi-p2pro") ||
+      strstr(hardware, "rk3308-bpi-p2-pro"))
+    return bpi_find_board_by_name("bpi-p2-pro");
 
   if (strstr(hardware, "Banana Pi BPI-M5") ||
       strstr(hardware, "BananaPi BPI-M5") ||
@@ -1645,7 +1712,10 @@ static uint32_t rockchip_read_reg(int bank, int offset)
     if (regs == NULL)
         return 0;
 
-    return regs[offset >> 2] | (regs[(offset + 4) >> 2] << 16);
+    if (rockchip_gpio_v2)
+        return regs[offset >> 2] | (regs[(offset + 4) >> 2] << 16);
+
+    return regs[offset >> 2];
 }
 
 static void rockchip_write_bit(int bank, int offset, int bit, int value)
@@ -1656,6 +1726,16 @@ static void rockchip_write_bit(int bank, int offset, int bit, int value)
 
     if (regs == NULL)
         return;
+
+    if (!rockchip_gpio_v2) {
+        data = regs[offset >> 2];
+        if (value)
+            data |= (1u << bit);
+        else
+            data &= ~(1u << bit);
+        regs[offset >> 2] = data;
+        return;
+    }
 
     half_bit = bit & 0xf;
     data = (value ? (1u << half_bit) : 0) | (1u << (half_bit + 16));
@@ -1682,7 +1762,7 @@ void rockchip_setup_gpio(int pin, int direction, int pud)
 
     bank = pin >> 5;
     bit = pin & 0x1f;
-    rockchip_write_bit(bank, ROCKCHIP_GPIO_SWPORT_DDR, bit, direction == OUTPUT);
+    rockchip_write_bit(bank, rockchip_gpio_swport_ddr, bit, direction == OUTPUT);
 }
 
 int rockchip_gpio_function(int pin)
@@ -1695,7 +1775,7 @@ int rockchip_gpio_function(int pin)
     bank = pin >> 5;
     bit = pin & 0x1f;
 
-    return (rockchip_read_reg(bank, ROCKCHIP_GPIO_SWPORT_DDR) & (1u << bit)) ? OUTPUT : INPUT;
+    return (rockchip_read_reg(bank, rockchip_gpio_swport_ddr) & (1u << bit)) ? OUTPUT : INPUT;
 }
 
 void rockchip_output_gpio(int pin, int value)
@@ -1707,7 +1787,7 @@ void rockchip_output_gpio(int pin, int value)
 
     bank = pin >> 5;
     bit = pin & 0x1f;
-    rockchip_write_bit(bank, ROCKCHIP_GPIO_SWPORT_DR, bit, value != 0);
+    rockchip_write_bit(bank, rockchip_gpio_swport_dr, bit, value != 0);
 }
 
 int rockchip_input_gpio(int pin)
@@ -1720,7 +1800,7 @@ int rockchip_input_gpio(int pin)
     bank = pin >> 5;
     bit = pin & 0x1f;
 
-    return (rockchip_read_reg(bank, ROCKCHIP_GPIO_EXT_PORT) & (1u << bit)) ? 1 : 0;
+    return (rockchip_read_reg(bank, rockchip_gpio_ext_port) & (1u << bit)) ? 1 : 0;
 }
 
 int rockchip_setup(void)
@@ -2086,6 +2166,8 @@ int bpi_get_rpi_info(rpi_info *info)
     }else if (bpi_found_rockchip == 1) {
 	if (bpi_model_is_rk3576(board->model))
 	    info->processor = "Rockchip RK3576";
+	else if (bpi_model_is_rk3308(board->model))
+	    info->processor = "Rockchip RK3308";
 	else if (bpi_model_is_rk3506(board->model))
 	    info->processor = "Rockchip RK3506J";
 	else if (bpi_model_is_rk3528(board->model))
