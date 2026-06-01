@@ -149,11 +149,11 @@ The supported IO surface is:
 | BPI-R4 Pro | done | Added MT7988 GPIO v2 support using the Armbian 6.17 `mt7988a-bananapi-bpi-r4-pro.dtsi` 26-pin map. The physical header matches the existing R4 map, but R4 Pro has its own board aliases/header so later 4e/8x differences can be adjusted independently. Detection now checks `/proc/device-tree/compatible` before the model string because the 4e/8x DTS model string is still generic `Bananapi BPI-R4`. Pull control remains no-op pending hardware validation. |
 | BPI-R2 Mini / R4 Mini / OpenWrt One | blocked | Reviewed local Armbian tree on 2026-06-02: no R2 Mini/R4 Mini board target or DTS was found. OpenWrt One has MT7981B DTS files, but 6.17 disables the DTB and the available DTS only exposes board internals such as memory/LED/flash/UART; no authoritative external IO header map is present. Do not add aliases until board targets and header policy are available. |
 | BPI-WiFi5 / WiFi6 / RT2 / RV2 | deferred | Reviewed local Armbian board matrix/docs on 2026-06-02: WiFi6 is Triductor/OpenWrt BSP only, RT2 is Realtek OpenWrt UBI flow, and WiFi5/RV2 are Siflower OpenWrt/FIT/web-upgrade flows with no local Armbian board family. No stable raw-image board target or external GPIO header policy exists for RPi.GPIO. |
-| BPI-F2 / F4 / F5 / S64 / Secure-Pi / SM9 / AI2H / Loongson boards | blocked | Need vendor BSP, kernel DTS, pinout, and/or new SoC backend before implementation. |
+| BPI-F2 / F4 / F5 / S64 / Secure-Pi / SM9 / AI2H / Loongson boards | blocked | Reviewed local Armbian priority docs on 2026-06-02: F2 lacks exact i.MX6 BPI board files; F4 needs a new SP7350 Sunplus family; F5 has no BPI-F5 T527 DTS/defconfig; S64 lacks Actions S700 Armbian/U-Boot targets; Secure-Pi has example repos but no Linux/U-Boot BSP; SM9 needs BM1688 SDK/boot-chain integration; AI2H has Renesas EVK files but no Banana Pi carrier DTS/DDR/board hook; Loongson boards need exact embedded U-Boot/BIOS/DTS/image policy beyond generic `uefi-loong64`. Do not add GPIO aliases until exact board files and header maps exist. |
 
 ## Current Next Item
 
-Continue Batch E router/service-header review from `BPI-F2 / F4 / F5 / S64 / Secure-Pi / SM9 / AI2H / Loongson boards`.
+No remaining planned `todo` items. Continue with hardware validation for completed boards or reopen blocked rows when exact board files/header maps become available.
 
 Resume sequence:
 
