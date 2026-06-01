@@ -69,8 +69,8 @@ static int mmap_gpio_mem(void)
    } else if (result == SETUP_CPUINFO_FAIL) {
       PyErr_SetString(PyExc_RuntimeError, "Unable to open /proc/cpuinfo");
       return 4;
-   } else if (result == SETUP_NOT_RPI_FAIL) {
-      PyErr_SetString(PyExc_RuntimeError, "Not running on a RPi!");
+   } else if (result == SETUP_NO_PERI_ADDR) {
+      PyErr_SetString(PyExc_RuntimeError, "Cannot determine SOC peripheral base address");
       return 5;
    } else { // result == SETUP_OK
       module_setup = 1;

@@ -42,6 +42,9 @@ void sunxi_setup_gpio(int gpio, int direction, int pud);
 int sunxi_gpio_function(int gpio);
 void sunxi_output_gpio(int gpio, int value);
 int sunxi_input_gpio(int gpio);
+void sunxi_set_pullupdn(int gpio, int pud);
+int mtk_setup(void);
+int mtk_set_gpio_out(unsigned int pin, unsigned int output);
 #endif
 
 #define SETUP_OK           0
@@ -49,7 +52,7 @@ int sunxi_input_gpio(int gpio);
 #define SETUP_MALLOC_FAIL  2
 #define SETUP_MMAP_FAIL    3
 #define SETUP_CPUINFO_FAIL 4
-#define SETUP_NOT_RPI_FAIL 5
+#define SETUP_NO_PERI_ADDR 5
 
 #define INPUT  1 // is really 0 for control register!
 #define OUTPUT 0 // is really 1 for control register!

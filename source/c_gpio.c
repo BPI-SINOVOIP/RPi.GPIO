@@ -30,6 +30,8 @@ SOFTWARE.
 
 #define BCM2708_PERI_BASE_DEFAULT   0x20000000
 #define BCM2709_PERI_BASE_DEFAULT   0x3f000000
+#define BCM2710_PERI_BASE_DEFAULT   0x3f000000
+#define BCM2711_PERI_BASE_DEFAULT   0xfe000000
 #define GPIO_BASE_OFFSET            0x200000
 #define FSEL_OFFSET                 0   // 0x0000
 #define SET_OFFSET                  7   // 0x001c / 4
@@ -42,6 +44,11 @@ SOFTWARE.
 #define LOW_DETECT_OFFSET           28  // 0x0070 / 4
 #define PULLUPDN_OFFSET             37  // 0x0094 / 4
 #define PULLUPDNCLK_OFFSET          38  // 0x0098 / 4
+
+#define PULLUPDN_OFFSET_2711_0      57
+#define PULLUPDN_OFFSET_2711_1      58
+#define PULLUPDN_OFFSET_2711_2      59
+#define PULLUPDN_OFFSET_2711_3      60
 
 #define PAGE_SIZE  (4*1024)
 #define BLOCK_SIZE (4*1024)
@@ -71,9 +78,11 @@ int setup(void)
 {
     int mem_fd;
     uint8_t *gpio_mem;
-    uint32_t peri_base;
+    uint32_t peri_base = 0;
     uint32_t gpio_base;
-    unsigned char buf[4];
+    uint8_t ranges[12] = { 0 };
+    uint8_t rev[4] = { 0 };
+    uint32_t cpu = 0;
     FILE *fp;
     char buffer[1024];
     char hardware[1024];
@@ -90,46 +99,77 @@ int setup(void)
     // try /dev/gpiomem first - this does not require root privs
     if ((mem_fd = open("/dev/gpiomem", O_RDWR|O_SYNC)) > 0)
     {
-        gpio_map = (uint32_t *)mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, mem_fd, 0);
-        if ((uint32_t)gpio_map < 0) {
+        if ((gpio_map = (uint32_t *)mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, mem_fd, 0)) == MAP_FAILED) {
             return SETUP_MMAP_FAIL;
         } else {
             return SETUP_OK;
         }
     }
 
-    // revert to /dev/mem method - requires root
+    // revert to /dev/mem method - requires root privileges
 
-    // determine peri_base
-    if ((fp = fopen("/proc/device-tree/soc/ranges", "rb")) != NULL) {
+    if ((fp = fopen("/proc/device-tree/soc/ranges", "rb")) != NULL)
+    {
         // get peri base from device tree
-        fseek(fp, 4, SEEK_SET);
-        if (fread(buf, 1, sizeof buf, fp) == sizeof buf) {
-            peri_base = buf[0] << 24 | buf[1] << 16 | buf[2] << 8 | buf[3] << 0;
+        if (fread(ranges, 1, sizeof(ranges), fp) >= 8) {
+            peri_base = ranges[4] << 24 | ranges[5] << 16 | ranges[6] << 8 | ranges[7] << 0;
+            if (!peri_base) {
+                peri_base = ranges[8] << 24 | ranges[9] << 16 | ranges[10] << 8 | ranges[11] << 0;
+            }
+        }
+        if ((ranges[0] != 0x7e) ||
+            (ranges[1] != 0x00) ||
+            (ranges[2] != 0x00) ||
+            (ranges[3] != 0x00) ||
+            ((peri_base != BCM2708_PERI_BASE_DEFAULT) &&
+             (peri_base != BCM2709_PERI_BASE_DEFAULT) &&
+             (peri_base != BCM2711_PERI_BASE_DEFAULT))) {
+                 peri_base = 0;
         }
         fclose(fp);
-    } else {
-        // guess peri base based on /proc/cpuinfo hardware field
+    }
+
+    // guess peri_base based on /proc/device-tree/system/linux,revision
+    if (!peri_base) {
+        if ((fp = fopen("/proc/device-tree/system/linux,revision", "rb")) != NULL) {
+            if (fread(rev, 1, sizeof(rev), fp) == 4) {
+                cpu = (rev[2] >> 4) & 0xf;
+                switch (cpu) {
+                    case 0 : peri_base = BCM2708_PERI_BASE_DEFAULT;
+                             break;
+                    case 1 :
+                    case 2 : peri_base = BCM2709_PERI_BASE_DEFAULT;
+                             break;
+                    case 3 : peri_base = BCM2711_PERI_BASE_DEFAULT;
+                             break;
+                }
+            }
+            fclose(fp);
+        }
+    }
+
+    // guess peri_base based on /proc/cpuinfo hardware field
+    if (!peri_base) {
         if ((fp = fopen("/proc/cpuinfo", "r")) == NULL)
             return SETUP_CPUINFO_FAIL;
 
-        while(!feof(fp) && !found) {
-            fgets(buffer, sizeof(buffer), fp);
+        while(!feof(fp) && !found && fgets(buffer, sizeof(buffer), fp)) {
             sscanf(buffer, "Hardware	: %s", hardware);
             if (strcmp(hardware, "BCM2708") == 0 || strcmp(hardware, "BCM2835") == 0) {
-                // pi 1 hardware
                 peri_base = BCM2708_PERI_BASE_DEFAULT;
-                found = 1;
             } else if (strcmp(hardware, "BCM2709") == 0 || strcmp(hardware, "BCM2836") == 0) {
-                // pi 2 hardware
                 peri_base = BCM2709_PERI_BASE_DEFAULT;
-                found = 1;
+            } else if (strcmp(hardware, "BCM2710") == 0 || strcmp(hardware, "BCM2837") == 0) {
+                peri_base = BCM2710_PERI_BASE_DEFAULT;
+            } else if (strcmp(hardware, "BCM2711") == 0) {
+                peri_base = BCM2711_PERI_BASE_DEFAULT;
             }
         }
         fclose(fp);
-        if (!found)
-            return SETUP_NOT_RPI_FAIL;
     }
+
+    if (!peri_base)
+        return SETUP_NO_PERI_ADDR;
 
     gpio_base = peri_base + GPIO_BASE_OFFSET;
 
@@ -143,9 +183,7 @@ int setup(void)
     if ((uint32_t)gpio_mem % PAGE_SIZE)
         gpio_mem += PAGE_SIZE - ((uint32_t)gpio_mem % PAGE_SIZE);
 
-    gpio_map = (uint32_t *)mmap( (void *)gpio_mem, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_FIXED, mem_fd, gpio_base);
-
-    if ((uint32_t)gpio_map < 0)
+    if ((gpio_map = (uint32_t *)mmap( (void *)gpio_mem, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_FIXED, mem_fd, gpio_base)) == MAP_FAILED)
         return SETUP_MMAP_FAIL;
 
     return SETUP_OK;
@@ -255,27 +293,49 @@ void set_low_event(int gpio, int enable)
 
 void set_pullupdn(int gpio, int pud)
 {
-    int clk_offset = PULLUPDNCLK_OFFSET + (gpio/32);
-    int shift = (gpio%32);
-
 #ifdef BPI
     if( bpi_found == 1 ) {
         gpio = *(pinTobcm_BP + gpio);
-        return sunxi_set_pullupdn(gpio, pud);
+        sunxi_set_pullupdn(gpio, pud);
+        return;
     }
 #endif
-    if (pud == PUD_DOWN)
-        *(gpio_map+PULLUPDN_OFFSET) = (*(gpio_map+PULLUPDN_OFFSET) & ~3) | PUD_DOWN;
-    else if (pud == PUD_UP)
-        *(gpio_map+PULLUPDN_OFFSET) = (*(gpio_map+PULLUPDN_OFFSET) & ~3) | PUD_UP;
-    else  // pud == PUD_OFF
-        *(gpio_map+PULLUPDN_OFFSET) &= ~3;
+    // Check GPIO register
+    int is2711 = *(gpio_map+PULLUPDN_OFFSET_2711_3) != 0x6770696f;
+    if (is2711) {
+        // Pi 4 Pull-up/down method
+        int pullreg = PULLUPDN_OFFSET_2711_0 + (gpio >> 4);
+        int pullshift = (gpio & 0xf) << 1;
+        unsigned int pullbits;
+        unsigned int pull = 0;
+        switch (pud) {
+            case PUD_OFF:  pull = 0; break;
+            case PUD_UP:   pull = 1; break;
+            case PUD_DOWN: pull = 2; break;
+            default:       pull = 0;
+        }
+        pullbits = *(gpio_map + pullreg);
+        pullbits &= ~(3 << pullshift);
+        pullbits |= (pull << pullshift);
+        *(gpio_map + pullreg) = pullbits;
+    } else {
+        // Legacy Pull-up/down method
+        int clk_offset = PULLUPDNCLK_OFFSET + (gpio/32);
+        int shift = (gpio%32);
 
-    short_wait();
-    *(gpio_map+clk_offset) = 1 << shift;
-    short_wait();
-    *(gpio_map+PULLUPDN_OFFSET) &= ~3;
-    *(gpio_map+clk_offset) = 0;
+        if (pud == PUD_DOWN) {
+            *(gpio_map+PULLUPDN_OFFSET) = (*(gpio_map+PULLUPDN_OFFSET) & ~3) | PUD_DOWN;
+        } else if (pud == PUD_UP) {
+            *(gpio_map+PULLUPDN_OFFSET) = (*(gpio_map+PULLUPDN_OFFSET) & ~3) | PUD_UP;
+        } else {
+            *(gpio_map+PULLUPDN_OFFSET) &= ~3;
+        }
+        short_wait();
+        *(gpio_map+clk_offset) = 1 << shift;
+        short_wait();
+        *(gpio_map+PULLUPDN_OFFSET) &= ~3;
+        *(gpio_map+clk_offset) = 0;
+    }
 }
 
 void setup_gpio(int gpio, int direction, int pud)
