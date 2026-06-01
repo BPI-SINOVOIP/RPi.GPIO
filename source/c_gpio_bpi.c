@@ -84,7 +84,8 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_R2PRO      87
 #define BPI_MODEL_M5PRO      88
 #define BPI_MODEL_CM5PRO     89
-#define BPI_MODELS_MAX       90
+#define BPI_MODEL_M7         90
+#define BPI_MODELS_MAX       91
 
 #define BPI_MAKER_SINOVOIP    6
 
@@ -211,6 +212,7 @@ static volatile uint32_t *gpio_map;
 #define ROCKCHIP_GPIO_PIN_END			159
 #define ROCKCHIP_GPIO_MAP_SIZE_RK3568		0x100
 #define ROCKCHIP_GPIO_MAP_SIZE_RK3576		0x200
+#define ROCKCHIP_GPIO_MAP_SIZE_RK3588		0x100
 
 #define ROCKCHIP_GPIO_SWPORT_DR		0x00
 #define ROCKCHIP_GPIO_SWPORT_DDR		0x08
@@ -281,6 +283,13 @@ static const off_t rockchip_gpio_base_rk3576[ROCKCHIP_GPIO_BANKS] = {
   0x2ae30000,
   0x2ae40000,
 };
+static const off_t rockchip_gpio_base_rk3588[ROCKCHIP_GPIO_BANKS] = {
+  0xfd8a0000,
+  0xfec20000,
+  0xfec30000,
+  0xfec40000,
+  0xfec50000,
+};
 static const off_t *rockchip_gpio_base = rockchip_gpio_base_rk3568;
 static size_t rockchip_gpio_map_size = ROCKCHIP_GPIO_MAP_SIZE_RK3568;
 
@@ -323,6 +332,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_R2PRO]   = "Banana Pi R2 Pro[RK3568]",
   [BPI_MODEL_M5PRO]   = "Banana Pi M5 Pro[RK3576]",
   [BPI_MODEL_CM5PRO]  = "Banana Pi CM5 Pro[RK3576]",
+  [BPI_MODEL_M7]      = "Banana Pi M7[RK3588]",
 } ;
 
 char *piRevisionNames [16] =
@@ -528,6 +538,10 @@ struct BPIBoards bpiboard [] =
   { "bananapi-r2pro", 12001, BPI_MODEL_R2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2PRO, physToGpio_BPI_R2PRO, pinTobcm_BPI_R2PRO 	},
   { "bananapi-r2-pro", 12001, BPI_MODEL_R2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2PRO, physToGpio_BPI_R2PRO, pinTobcm_BPI_R2PRO 	},
   { "banana-pi-r2-pro", 12001, BPI_MODEL_R2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2PRO, physToGpio_BPI_R2PRO, pinTobcm_BPI_R2PRO 	},
+  { "bpi-m7",      12301, BPI_MODEL_M7, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M7, physToGpio_BPI_M7, pinTobcm_BPI_M7 	},
+  { "bananapim7",  12301, BPI_MODEL_M7, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M7, physToGpio_BPI_M7, pinTobcm_BPI_M7 	},
+  { "banana-pi-m7", 12301, BPI_MODEL_M7, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M7, physToGpio_BPI_M7, pinTobcm_BPI_M7 	},
+  { "bananapi-m7", 12301, BPI_MODEL_M7, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M7, physToGpio_BPI_M7, pinTobcm_BPI_M7 	},
   { "bpi-r2",      11101, BPI_MODEL_R2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2,  physToGpio_BPI_R2,  pinTobcm_BPI_R2    },
   { NULL,		0, 0, 1, 2, BPI_MAKER_SINOVOIP, 0, NULL, NULL, NULL 	},
 } ;
@@ -548,9 +562,16 @@ static int bpi_model_is_rk3576(int model)
   return model == BPI_MODEL_M5PRO || model == BPI_MODEL_CM5PRO;
 }
 
+static int bpi_model_is_rk3588(int model)
+{
+  return model == BPI_MODEL_M7;
+}
+
 static int bpi_model_is_rockchip(int model)
 {
-  return model == BPI_MODEL_R2PRO || bpi_model_is_rk3576(model);
+  return model == BPI_MODEL_R2PRO ||
+      bpi_model_is_rk3576(model) ||
+      bpi_model_is_rk3588(model);
 }
 
 static void bpi_select_rockchip_backend(int model)
@@ -558,6 +579,12 @@ static void bpi_select_rockchip_backend(int model)
   if (bpi_model_is_rk3576(model)) {
     rockchip_gpio_base = rockchip_gpio_base_rk3576;
     rockchip_gpio_map_size = ROCKCHIP_GPIO_MAP_SIZE_RK3576;
+    return;
+  }
+
+  if (bpi_model_is_rk3588(model)) {
+    rockchip_gpio_base = rockchip_gpio_base_rk3588;
+    rockchip_gpio_map_size = ROCKCHIP_GPIO_MAP_SIZE_RK3588;
     return;
   }
 
@@ -611,6 +638,15 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "BPI-M5 Pro") ||
       strstr(hardware, "rk3576-bananapi-m5-pro"))
     return bpi_find_board_by_name("bpi-m5-pro");
+
+  if (strstr(hardware, "Banana Pi BPI-M7") ||
+      strstr(hardware, "BananaPi BPI-M7") ||
+      strstr(hardware, "Banana Pi M7") ||
+      strstr(hardware, "BananaPi M7") ||
+      strstr(hardware, "BPI-M7") ||
+      strstr(hardware, "bananapi,m7") ||
+      strstr(hardware, "rk3588-bananapi-m7"))
+    return bpi_find_board_by_name("bpi-m7");
 
   if (strstr(hardware, "Banana Pi BPI-M5") ||
       strstr(hardware, "BananaPi BPI-M5") ||
@@ -1898,7 +1934,12 @@ int bpi_get_rpi_info(rpi_info *info)
     }else if (bpi_found_renesas == 1) {
 	info->processor = "Renesas RZ/V2N";
     }else if (bpi_found_rockchip == 1) {
-	info->processor = bpi_model_is_rk3576(board->model) ? "Rockchip RK3576" : "Rockchip RK3568";
+	if (bpi_model_is_rk3576(board->model))
+	    info->processor = "Rockchip RK3576";
+	else if (bpi_model_is_rk3588(board->model))
+	    info->processor = "Rockchip RK3588";
+	else
+	    info->processor = "Rockchip RK3568";
     }else if (bpi_found_sun50iw9 == 1) {
 	info->processor = "AW SUN50IW9";
     }else{

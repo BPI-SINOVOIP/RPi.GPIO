@@ -116,7 +116,8 @@ The supported IO surface is:
 | BPI-R2 Pro | RK3568 | done | Added RK3568 GPIO v2 mmap backend and 40-pin CON2 map from official Banana Pi R2 Pro GPIO table plus Armbian DTS. Basic GPIO input/output/read/write build-tested; pull remains no-op pending RK3568 GRF pinctrl hardware validation. |
 | BPI-CM2 | RK3568 module | blocked | Official CM2 page describes a Raspberry Pi CM4-compatible module and says the dedicated CM2 base board was still being designed; Armbian currently uses an R2 Pro-derived DTS. Need a confirmed CM2 carrier/base-board 40-pin map before adding an alias. |
 | BPI-M5 Pro / BPI-CM5 Pro | RK3576 | done | Added RK3576 selection to the Rockchip GPIO v2 mmap backend, M5 Pro aliases/map from the official Banana Pi M5 Pro 40-pin table plus Armbian `rk3576-bananapi-m5-pro`, and CM5 Pro aliases/map from the official Banana Pi CM5 Pro IO board 40-pin table plus Armbian `rk3576-armsom-cm5-io`. Basic GPIO input/output/read/write extension build-tested; pull remains no-op pending RK3576 GRF pinctrl hardware validation. M5 Pro pin 28/40 and CM5 Pro pin 16 use GPIO numbers derived from explicit function names where the official number cell is blank; CM5 Pro pin 28 follows the official GPIO number 109 despite a mixed function-cell label. |
-| BPI-M7 / W3 / AIM7 / LM7 | RK3588 | todo | Needs RK3588 backend and carrier map separation. |
+| BPI-M7 | RK3588 | done | Added RK3588 selection to the Rockchip GPIO v2 mmap backend and 40-pin map from the official Banana Pi M7 GPIO table plus Armbian `rk3588-bananapi-m7`. Basic GPIO input/output/read/write extension build-tested; pull remains no-op pending RK3588 GRF pinctrl hardware validation. Pin 28 uses GPIO 149 derived from the explicit `GPIO4_C5` function because the official number cell is missing/misaligned. |
+| BPI-W3 / AIM7 / LM7 | RK3588 | todo | Do not alias to M7 until each module/carrier has a confirmed 40-pin or carrier GPIO map. |
 | BPI-M1 Super / M4 Super / Forge1 / P2 Pro | RK3528/RK3568/RK3506/RK3308 | todo | Needs per-SoC backend review. |
 
 ### Batch D: vendor or WIP boards
@@ -140,14 +141,13 @@ The supported IO surface is:
 
 ## Current Next Item
 
-Continue Batch C from `BPI-M7 / W3 / AIM7 / LM7`.
+Continue Batch C from `BPI-W3 / AIM7 / LM7`.
 
 Resume sequence:
 
-1. Confirm RK3588 GPIO bank base addresses, GPIO v2 register compatibility, and
-   the exact 40-pin/carrier maps for `BPI-M7 / W3 / AIM7 / LM7`.
-2. Add one board or exact carrier alias set in `BPI-WiringPi2`, build-test,
-   commit, and push.
+1. Confirm exact 40-pin/carrier maps for `BPI-W3 / AIM7 / LM7`.
+2. Add one board or exact carrier alias set at a time in `BPI-WiringPi2`,
+   build-test, commit, and push.
 3. Add the same board in this repo, build-test, commit, and push.
-4. If the RK3588 backend or carrier map is not reliable from available sources,
+4. If a carrier map is not reliable from available sources,
    mark the row blocked with the exact missing item instead of guessing.
