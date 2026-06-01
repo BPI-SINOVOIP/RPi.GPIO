@@ -62,6 +62,12 @@ int spacemit_gpio_function(int gpio);
 void spacemit_output_gpio(int gpio, int value);
 int spacemit_input_gpio(int gpio);
 void spacemit_set_pullupdn(int gpio, int pud);
+int renesas_setup(void);
+void renesas_setup_gpio(int gpio, int direction, int pud);
+int renesas_gpio_function(int gpio);
+void renesas_output_gpio(int gpio, int value);
+int renesas_input_gpio(int gpio);
+void renesas_set_pullupdn(int gpio, int pud);
 void bpi_cleanup(void);
 #endif
 
