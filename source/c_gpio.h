@@ -56,6 +56,12 @@ int meson_gpio_function(int gpio);
 void meson_output_gpio(int gpio, int value);
 int meson_input_gpio(int gpio);
 void meson_set_pullupdn(int gpio, int pud);
+int spacemit_setup(void);
+void spacemit_setup_gpio(int gpio, int direction, int pud);
+int spacemit_gpio_function(int gpio);
+void spacemit_output_gpio(int gpio, int value);
+int spacemit_input_gpio(int gpio);
+void spacemit_set_pullupdn(int gpio, int pud);
 void bpi_cleanup(void);
 #endif
 
