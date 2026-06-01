@@ -148,12 +148,12 @@ The supported IO surface is:
 | BPI-R4 Lite | done | Added MT7987 GPIO v2 support by reusing the MTK v2 mmap backend (`pio@1001f000`) and the Armbian 6.17 `mt7987a-bananapi-bpi-r4-lite-mikrobus.dtsi` map. BOARD mode follows the 2x8 MikroBUS physical pins 1-16; GPIO-capable pins are 5/6/7/8/10/11/12/13/14 only. Pull control remains no-op pending hardware validation. |
 | BPI-R4 Pro | done | Added MT7988 GPIO v2 support using the Armbian 6.17 `mt7988a-bananapi-bpi-r4-pro.dtsi` 26-pin map. The physical header matches the existing R4 map, but R4 Pro has its own board aliases/header so later 4e/8x differences can be adjusted independently. Detection now checks `/proc/device-tree/compatible` before the model string because the 4e/8x DTS model string is still generic `Bananapi BPI-R4`. Pull control remains no-op pending hardware validation. |
 | BPI-R2 Mini / R4 Mini / OpenWrt One | blocked | Reviewed local Armbian tree on 2026-06-02: no R2 Mini/R4 Mini board target or DTS was found. OpenWrt One has MT7981B DTS files, but 6.17 disables the DTB and the available DTS only exposes board internals such as memory/LED/flash/UART; no authoritative external IO header map is present. Do not add aliases until board targets and header policy are available. |
-| BPI-WiFi5 / WiFi6 / RT2 / RV2 | deferred | Router/OpenWrt image flows; no generic RPi.GPIO target until IO header requirement is defined. |
+| BPI-WiFi5 / WiFi6 / RT2 / RV2 | deferred | Reviewed local Armbian board matrix/docs on 2026-06-02: WiFi6 is Triductor/OpenWrt BSP only, RT2 is Realtek OpenWrt UBI flow, and WiFi5/RV2 are Siflower OpenWrt/FIT/web-upgrade flows with no local Armbian board family. No stable raw-image board target or external GPIO header policy exists for RPi.GPIO. |
 | BPI-F2 / F4 / F5 / S64 / Secure-Pi / SM9 / AI2H / Loongson boards | blocked | Need vendor BSP, kernel DTS, pinout, and/or new SoC backend before implementation. |
 
 ## Current Next Item
 
-Continue Batch E router/service-header review from `BPI-WiFi5 / WiFi6 / RT2 / RV2`.
+Continue Batch E router/service-header review from `BPI-F2 / F4 / F5 / S64 / Secure-Pi / SM9 / AI2H / Loongson boards`.
 
 Resume sequence:
 
