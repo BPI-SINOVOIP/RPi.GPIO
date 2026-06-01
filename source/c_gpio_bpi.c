@@ -97,7 +97,8 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_F2S        100
 #define BPI_MODEL_F2P        101
 #define BPI_MODEL_CM6        102
-#define BPI_MODELS_MAX       103
+#define BPI_MODEL_R4         103
+#define BPI_MODELS_MAX       104
 
 #define BPI_MAKER_SINOVOIP    6
 
@@ -124,6 +125,16 @@ static volatile uint32_t *gpio_map;
 #define MTK_GPIO_MAP_SIZE			(8 * 1024)
 #define MTK_GPIO_MODE_PINS_PER_REG		5
 #define MTK_GPIO_FIELD_PINS_PER_REG		16
+
+#define MTK_V2_GPIO_BASE_ADDR			0x1001F000
+#define MTK_V2_GPIO_DIR			0x00
+#define MTK_V2_GPIO_DOUT			0x100
+#define MTK_V2_GPIO_DIN			0x200
+#define MTK_V2_GPIO_MODE			0x300
+#define MTK_V2_GPIO_MAP_SIZE			(4 * 1024)
+#define MTK_V2_MODE_PINS_PER_REG		8
+#define MTK_V2_MODE_BITS			4
+#define MTK_V2_FIELD_PINS_PER_REG		32
 
 #define MESON_GPIO_BASE_ADDR			0xFF634000
 #define MESON_GPIO_AO_BASE_ADDR			0xFF800000
@@ -320,6 +331,7 @@ static volatile uint32_t *r_pio_map;
 
 int bpi_found=-1;
 int bpi_found_mtk = 0;
+int bpi_found_mtk_v2 = 0;
 int bpi_found_sun50iw9 = 0;
 int bpi_found_meson = 0;
 int bpi_found_spacemit = 0;
@@ -335,6 +347,7 @@ const int *pinTobcm_BP ;
 
 
 static volatile uint32_t *r_gpio_map;
+static uint8_t *mtk_v2_gpio_map = NULL;
 static volatile uint32_t *spacemit_gpio_map;
 static volatile uint32_t *spacemit_pinctrl_map;
 static volatile uint32_t *renesas_gpio_map;
@@ -499,6 +512,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_F2S]     = "Banana Pi F2S[Sunplus SP7021]",
   [BPI_MODEL_F2P]     = "Banana Pi F2P[Sunplus SP7021]",
   [BPI_MODEL_CM6]     = "Banana Pi CM6[SpacemiT K1]",
+  [BPI_MODEL_R4]      = "Banana Pi R4[MT7988]",
 } ;
 
 char *piRevisionNames [16] =
@@ -772,6 +786,10 @@ struct BPIBoards bpiboard [] =
   { "bananapif2p", 13401, BPI_MODEL_F2P, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_F2S_F2P, physToGpio_BPI_F2S_F2P, pinTobcm_BPI_F2S_F2P 	},
   { "bananapi-f2p", 13401, BPI_MODEL_F2P, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_F2S_F2P, physToGpio_BPI_F2S_F2P, pinTobcm_BPI_F2S_F2P 	},
   { "banana-pi-f2p", 13401, BPI_MODEL_F2P, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_F2S_F2P, physToGpio_BPI_F2S_F2P, pinTobcm_BPI_F2S_F2P 	},
+  { "bpi-r4",      13601, BPI_MODEL_R4, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4, physToGpio_BPI_R4, pinTobcm_BPI_R4 	},
+  { "bananapir4",  13601, BPI_MODEL_R4, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4, physToGpio_BPI_R4, pinTobcm_BPI_R4 	},
+  { "bananapi-r4", 13601, BPI_MODEL_R4, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4, physToGpio_BPI_R4, pinTobcm_BPI_R4 	},
+  { "banana-pi-r4", 13601, BPI_MODEL_R4, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4, physToGpio_BPI_R4, pinTobcm_BPI_R4 	},
   { "bpi-r2",      11101, BPI_MODEL_R2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2,  physToGpio_BPI_R2,  pinTobcm_BPI_R2    },
   { NULL,		0, 0, 1, 2, BPI_MAKER_SINOVOIP, 0, NULL, NULL, NULL 	},
 } ;
@@ -1132,6 +1150,15 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "BPI-AI2N"))
     return bpi_find_board_by_name("bpi-ai2n");
 
+  if (strstr(hardware, "Bananapi BPI-R4") ||
+      strstr(hardware, "BananaPi BPI-R4") ||
+      strstr(hardware, "Banana Pi BPI-R4") ||
+      strstr(hardware, "BananaPi R4") ||
+      strstr(hardware, "Banana Pi R4") ||
+      strstr(hardware, "BPI-R4") ||
+      strstr(hardware, "mt7988a-bananapi-bpi-r4"))
+    return bpi_find_board_by_name("bpi-r4");
+
   if (strstr(hardware, "Bananapi-R2 Pro") ||
       strstr(hardware, "BananaPi BPI-R2 Pro") ||
       strstr(hardware, "Banana Pi BPI-R2 Pro") ||
@@ -1295,7 +1322,7 @@ int mtk_setup(void)
 {
     int gpio_mmap_fd = 0;
     if ((gpio_mmap_fd = open("/dev/mem", O_RDWR|O_SYNC)) < 0) {
-        fprintf(stderr, "unable to open mmap file");
+        fprintf(stderr, "unable to open MTK GPIO v2 mmap file");
         return -1;
     }
     
@@ -1312,6 +1339,143 @@ int mtk_setup(void)
 
     return SETUP_OK;
 
+}
+
+static volatile uint32_t *mtk_v2_gpio_reg(unsigned int offset)
+{
+    return (volatile uint32_t *)(mtk_v2_gpio_map + offset);
+}
+
+static int mtk_v2_gpio_mapped(void)
+{
+    return mtk_v2_gpio_map != NULL;
+}
+
+static unsigned int mtk_v2_gpio_field_offset(unsigned int base, unsigned int pin)
+{
+    return base + (pin / MTK_V2_FIELD_PINS_PER_REG) * 0x10;
+}
+
+static unsigned int mtk_v2_gpio_field_shift(unsigned int pin)
+{
+    return pin % MTK_V2_FIELD_PINS_PER_REG;
+}
+
+static void mtk_v2_gpio_update_bit(unsigned int offset, unsigned int shift, int value)
+{
+    uint32_t regval;
+    volatile uint32_t *reg;
+
+    if (!mtk_v2_gpio_mapped())
+        return;
+
+    reg = mtk_v2_gpio_reg(offset);
+    regval = *reg;
+    if (value)
+        regval |= (1u << shift);
+    else
+        regval &= ~(1u << shift);
+    *reg = regval;
+}
+
+static void mtk_v2_set_pin_mode(int pin, int mode)
+{
+    uint32_t regval;
+    unsigned int shift;
+    volatile uint32_t *reg;
+
+    if (!mtk_v2_gpio_mapped())
+        return;
+
+    reg = mtk_v2_gpio_reg(MTK_V2_GPIO_MODE + (pin / MTK_V2_MODE_PINS_PER_REG) * 0x10);
+    shift = (pin % MTK_V2_MODE_PINS_PER_REG) * MTK_V2_MODE_BITS;
+    regval = *reg;
+    regval &= ~(0xfu << shift);
+    regval |= ((mode & 0xfu) << shift);
+    *reg = regval;
+}
+
+static void mtk_v2_set_pin_direction(int pin, int direction)
+{
+    if (!mtk_v2_gpio_mapped())
+        return;
+
+    mtk_v2_gpio_update_bit(mtk_v2_gpio_field_offset(MTK_V2_GPIO_DIR, pin),
+                           mtk_v2_gpio_field_shift(pin), direction == OUTPUT);
+}
+
+void mtk_v2_set_pullupdn(int pin, int pud)
+{
+    (void)pin;
+    (void)pud;
+}
+
+void mtk_v2_setup_gpio(int pin, int direction, int pud)
+{
+    mtk_v2_set_pullupdn(pin, pud);
+    mtk_v2_set_pin_mode(pin, 0);
+    mtk_v2_set_pin_direction(pin, direction);
+}
+
+int mtk_v2_gpio_function(int pin)
+{
+    uint32_t mode;
+    unsigned int offset;
+    unsigned int shift;
+
+    if (!mtk_v2_gpio_mapped())
+        return 0;
+
+    offset = MTK_V2_GPIO_MODE + (pin / MTK_V2_MODE_PINS_PER_REG) * 0x10;
+    shift = (pin % MTK_V2_MODE_PINS_PER_REG) * MTK_V2_MODE_BITS;
+    mode = (*mtk_v2_gpio_reg(offset) >> shift) & 0xfu;
+    if (mode != 0)
+        return mode;
+
+    offset = mtk_v2_gpio_field_offset(MTK_V2_GPIO_DIR, pin);
+    shift = mtk_v2_gpio_field_shift(pin);
+    return ((*mtk_v2_gpio_reg(offset) >> shift) & 0x1u) ? 1 : 0;
+}
+
+void mtk_v2_output_gpio(int pin, int value)
+{
+    if (!mtk_v2_gpio_mapped())
+        return;
+
+    mtk_v2_gpio_update_bit(mtk_v2_gpio_field_offset(MTK_V2_GPIO_DOUT, pin),
+                           mtk_v2_gpio_field_shift(pin), value == HIGH);
+}
+
+int mtk_v2_input_gpio(int pin)
+{
+    if (!mtk_v2_gpio_mapped())
+        return LOW;
+
+    return ((*mtk_v2_gpio_reg(mtk_v2_gpio_field_offset(MTK_V2_GPIO_DIN, pin)) >>
+             mtk_v2_gpio_field_shift(pin)) & 0x1u) ? HIGH : LOW;
+}
+
+int mtk_v2_setup(void)
+{
+    int gpio_mmap_fd = 0;
+
+    if ((gpio_mmap_fd = open("/dev/mem", O_RDWR|O_SYNC)) < 0) {
+        fprintf(stderr, "unable to open mmap file");
+        return -1;
+    }
+
+    mtk_v2_gpio_map = (uint8_t *)mmap(NULL, MTK_V2_GPIO_MAP_SIZE, PROT_READ | PROT_WRITE,
+                                      MAP_SHARED, gpio_mmap_fd, MTK_V2_GPIO_BASE_ADDR);
+    if (mtk_v2_gpio_map == MAP_FAILED) {
+        perror("mmap MTK GPIO v2");
+        fprintf(stderr, "failed to mmap MTK GPIO v2");
+        mtk_v2_gpio_map = NULL;
+        close(gpio_mmap_fd);
+        return -1;
+    }
+    close(gpio_mmap_fd);
+
+    return SETUP_OK;
 }
 
 static volatile uint32_t *meson_gpio_map = NULL;
@@ -2742,6 +2906,14 @@ void bpi_cleanup(void)
         return;
     }
 
+    if (bpi_found_mtk_v2 == 1) {
+        if (mtk_v2_gpio_map != NULL) {
+            munmap((void *)mtk_v2_gpio_map, MTK_V2_GPIO_MAP_SIZE);
+            mtk_v2_gpio_map = NULL;
+        }
+        return;
+    }
+
     if (bpi_found_meson == 1) {
         if (meson_gpio_map != NULL) {
             munmap((void *)meson_gpio_map, BLOCK_SIZE);
@@ -2849,6 +3021,7 @@ int bpi_piGpioLayout (void)
 
   bpi_found = 0; // -1: not init, 0: init but not found, 1: found
   bpi_found_mtk = 0;
+  bpi_found_mtk_v2 = 0;
   bpi_found_sun50iw9 = 0;
   bpi_found_meson = 0;
   bpi_found_spacemit = 0;
@@ -2907,6 +3080,7 @@ int bpi_get_rpi_info(rpi_info *info)
         bpi_found_mtk = 1;
 	printf("found mtk board\n");
     }
+    bpi_found_mtk_v2 = (board->model == BPI_MODEL_R4);
     bpi_found_sun50iw9 = (board->model == BPI_MODEL_M4BERRY || board->model == BPI_MODEL_M4ZERO);
     bpi_found_meson = (board->model == BPI_MODEL_M2S ||
                        board->model == BPI_MODEL_CM4IO ||
@@ -2930,6 +3104,8 @@ int bpi_get_rpi_info(rpi_info *info)
     info->manufacturer = manufacturer;
     if(bpi_found_mtk == 1){
         info->processor = "MTK";
+    }else if (bpi_found_mtk_v2 == 1) {
+        info->processor = "MT7988";
     }else if (bpi_found_meson == 1) {
 	info->processor = "Amlogic Meson";
     }else if (bpi_found_spacemit == 1) {
