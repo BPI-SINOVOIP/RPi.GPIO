@@ -107,7 +107,7 @@ The supported IO surface is:
 | BPI-M5 | Amlogic SM1 | done | Reuses Meson backend; 40-pin map is from Dangku `bananapim5` and Armbian `meson-sm1-bananapi-m5`; local extension build passed. |
 | BPI-M2 Pro | Amlogic SM1 | alias | M5-compatible alias per Dangku M5/M2Pro handling and Armbian SM1 overlays; uses separate model id/name; local extension build passed. |
 | BPI-F3 | SpacemiT K1 | done | Added K1 GPIO mmap backend from Dangku F3/SpacemiT reference; 40-pin map is from Dangku `bananapif3`; local extension build passed. Hardware PWM remains guarded pending hardware validation. |
-| BPI-AI2N | Renesas RZ/V2N | todo | Needs RZ/V2N GPIO backend and Banana Pi header map. |
+| BPI-AI2N | Renesas RZ/V2N | done | Added RZ/V2N GPIO mmap backend from Dangku AI2N/Renesas reference; 40-pin map is from Dangku `bananapiai2n`; local extension build passed. Hardware PWM is out of scope for RPi.GPIO. |
 
 ### Batch C: Rockchip boards
 
@@ -139,13 +139,14 @@ The supported IO surface is:
 
 ## Current Next Item
 
-Continue Batch B from `BPI-AI2N`.
+Continue Batch C from `BPI-R2 Pro / BPI-CM2`.
 
 Resume sequence:
 
-1. Confirm the `BPI-AI2N` RZ/V2N GPIO numbering, register backend, and 40-pin
-   map against Armbian and vendor references.
-2. Add `BPI-AI2N` in `BPI-WiringPi2`, build-test, commit, and push.
-3. Add `BPI-AI2N` in this repo, build-test, commit, and push.
-4. If the RZ/V2N mmap backend is not reliable from available sources, mark
-   `BPI-AI2N` blocked with the missing register/map item instead of guessing.
+1. Confirm the RK3568 GPIO numbering, register backend, and 40-pin or carrier
+   map for `BPI-R2 Pro / BPI-CM2` against Armbian, vendor DTS, and any Dangku
+   reference code.
+2. Add `BPI-R2 Pro / BPI-CM2` in `BPI-WiringPi2`, build-test, commit, and push.
+3. Add `BPI-R2 Pro / BPI-CM2` in this repo, build-test, commit, and push.
+4. If the RK3568 mmap backend is not reliable from available sources, mark
+   `BPI-R2 Pro / BPI-CM2` blocked with the missing register/map item instead of guessing.
