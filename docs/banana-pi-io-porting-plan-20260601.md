@@ -113,7 +113,8 @@ The supported IO surface is:
 
 | Board group | SoC family | Status | Notes |
 | --- | --- | --- | --- |
-| BPI-R2 Pro / BPI-CM2 | RK3568 | todo | Needs Rockchip GPIO backend and per-carrier maps. |
+| BPI-R2 Pro | RK3568 | done | Added RK3568 GPIO v2 mmap backend and 40-pin CON2 map from official Banana Pi R2 Pro GPIO table plus Armbian DTS. Basic GPIO input/output/read/write build-tested; pull remains no-op pending RK3568 GRF pinctrl hardware validation. |
+| BPI-CM2 | RK3568 module | blocked | Official CM2 page describes a Raspberry Pi CM4-compatible module and says the dedicated CM2 base board was still being designed; Armbian currently uses an R2 Pro-derived DTS. Need a confirmed CM2 carrier/base-board 40-pin map before adding an alias. |
 | BPI-M5 Pro / BPI-CM5 Pro | RK3576 | todo | Needs RK35xx backend and maps. |
 | BPI-M7 / W3 / AIM7 / LM7 | RK3588 | todo | Needs RK3588 backend and carrier map separation. |
 | BPI-M1 Super / M4 Super / Forge1 / P2 Pro | RK3528/RK3568/RK3506/RK3308 | todo | Needs per-SoC backend review. |
@@ -139,14 +140,13 @@ The supported IO surface is:
 
 ## Current Next Item
 
-Continue Batch C from `BPI-R2 Pro / BPI-CM2`.
+Continue Batch C from `BPI-M5 Pro / BPI-CM5 Pro`.
 
 Resume sequence:
 
-1. Confirm the RK3568 GPIO numbering, register backend, and 40-pin or carrier
-   map for `BPI-R2 Pro / BPI-CM2` against Armbian, vendor DTS, and any Dangku
-   reference code.
-2. Add `BPI-R2 Pro / BPI-CM2` in `BPI-WiringPi2`, build-test, commit, and push.
-3. Add `BPI-R2 Pro / BPI-CM2` in this repo, build-test, commit, and push.
-4. If the RK3568 mmap backend is not reliable from available sources, mark
-   `BPI-R2 Pro / BPI-CM2` blocked with the missing register/map item instead of guessing.
+1. Confirm RK3576 GPIO numbering, register backend compatibility with the RK3568
+   GPIO v2 path, and the 40-pin or carrier map for `BPI-M5 Pro / BPI-CM5 Pro`.
+2. Add the board in `BPI-WiringPi2`, build-test, commit, and push.
+3. Add the same board in this repo, build-test, commit, and push.
+4. If the RK3576 backend or carrier map is not reliable from available sources,
+   mark the row blocked with the exact missing item instead of guessing.

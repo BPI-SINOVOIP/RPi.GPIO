@@ -68,6 +68,12 @@ int renesas_gpio_function(int gpio);
 void renesas_output_gpio(int gpio, int value);
 int renesas_input_gpio(int gpio);
 void renesas_set_pullupdn(int gpio, int pud);
+int rockchip_setup(void);
+void rockchip_setup_gpio(int gpio, int direction, int pud);
+int rockchip_gpio_function(int gpio);
+void rockchip_output_gpio(int gpio, int value);
+int rockchip_input_gpio(int gpio);
+void rockchip_set_pullupdn(int gpio, int pud);
 void bpi_cleanup(void);
 #endif
 

@@ -81,7 +81,8 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_M2PRO      84
 #define BPI_MODEL_F3         85
 #define BPI_MODEL_AI2N       86
-#define BPI_MODELS_MAX       87
+#define BPI_MODEL_R2PRO      87
+#define BPI_MODELS_MAX       88
 
 #define BPI_MAKER_SINOVOIP    6
 
@@ -203,6 +204,15 @@ static volatile uint32_t *gpio_map;
 #define RENESAS_PULL_UP			0x3
 #define RENESAS_PULL_DOWN			0x2
 
+#define ROCKCHIP_GPIO_BANKS			5
+#define ROCKCHIP_GPIO_PIN_BASE			0
+#define ROCKCHIP_GPIO_PIN_END			159
+#define ROCKCHIP_GPIO_MAP_SIZE			0x100
+
+#define ROCKCHIP_GPIO_SWPORT_DR		0x00
+#define ROCKCHIP_GPIO_SWPORT_DDR		0x08
+#define ROCKCHIP_GPIO_EXT_PORT			0x70
+
 typedef struct sunxi_gpio {
     unsigned int CFG[4];
     unsigned int DAT;
@@ -242,6 +252,7 @@ int bpi_found_sun50iw9 = 0;
 int bpi_found_meson = 0;
 int bpi_found_spacemit = 0;
 int bpi_found_renesas = 0;
+int bpi_found_rockchip = 0;
 
 const int *pinToGpio_BP ;
 const int *physToGpio_BP ;
@@ -252,6 +263,14 @@ static volatile uint32_t *r_gpio_map;
 static volatile uint32_t *spacemit_gpio_map;
 static volatile uint32_t *spacemit_pinctrl_map;
 static volatile uint32_t *renesas_gpio_map;
+static volatile uint32_t *rockchip_gpio_map[ROCKCHIP_GPIO_BANKS] = { NULL };
+static const off_t rockchip_gpio_base[ROCKCHIP_GPIO_BANKS] = {
+  0xfdd60000,
+  0xfe740000,
+  0xfe750000,
+  0xfe760000,
+  0xfe770000,
+};
 
 char *piModelNames [BPI_MODELS_MAX] =
 {
@@ -289,6 +308,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_M2PRO]   = "Banana Pi M2 Pro[Amlogic SM1]",
   [BPI_MODEL_F3]      = "Banana Pi F3[SpacemiT K1]",
   [BPI_MODEL_AI2N]    = "Banana Pi AI2N[Renesas RZ/V2N]",
+  [BPI_MODEL_R2PRO]   = "Banana Pi R2 Pro[RK3568]",
 } ;
 
 char *piRevisionNames [16] =
@@ -474,6 +494,12 @@ struct BPIBoards bpiboard [] =
   { "bananapiai2n", 11901, BPI_MODEL_AI2N, 1, 5, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_AI2N, physToGpio_BPI_AI2N, pinTobcm_BPI_AI2N 	},
   { "banana-pi-ai2n", 11901, BPI_MODEL_AI2N, 1, 5, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_AI2N, physToGpio_BPI_AI2N, pinTobcm_BPI_AI2N 	},
   { "bananapi-ai2n", 11901, BPI_MODEL_AI2N, 1, 5, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_AI2N, physToGpio_BPI_AI2N, pinTobcm_BPI_AI2N 	},
+  { "bpi-r2pro",   12001, BPI_MODEL_R2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2PRO, physToGpio_BPI_R2PRO, pinTobcm_BPI_R2PRO 	},
+  { "bpi-r2-pro",  12001, BPI_MODEL_R2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2PRO, physToGpio_BPI_R2PRO, pinTobcm_BPI_R2PRO 	},
+  { "bananapir2pro", 12001, BPI_MODEL_R2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2PRO, physToGpio_BPI_R2PRO, pinTobcm_BPI_R2PRO 	},
+  { "bananapi-r2pro", 12001, BPI_MODEL_R2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2PRO, physToGpio_BPI_R2PRO, pinTobcm_BPI_R2PRO 	},
+  { "bananapi-r2-pro", 12001, BPI_MODEL_R2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2PRO, physToGpio_BPI_R2PRO, pinTobcm_BPI_R2PRO 	},
+  { "banana-pi-r2-pro", 12001, BPI_MODEL_R2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2PRO, physToGpio_BPI_R2PRO, pinTobcm_BPI_R2PRO 	},
   { "bpi-r2",      11101, BPI_MODEL_R2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2,  physToGpio_BPI_R2,  pinTobcm_BPI_R2    },
   { NULL,		0, 0, 1, 2, BPI_MAKER_SINOVOIP, 0, NULL, NULL, NULL 	},
 } ;
@@ -551,6 +577,15 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "Banana Pi AI2N") ||
       strstr(hardware, "BPI-AI2N"))
     return bpi_find_board_by_name("bpi-ai2n");
+
+  if (strstr(hardware, "Bananapi-R2 Pro") ||
+      strstr(hardware, "BananaPi BPI-R2 Pro") ||
+      strstr(hardware, "Banana Pi BPI-R2 Pro") ||
+      strstr(hardware, "BananaPi R2 Pro") ||
+      strstr(hardware, "Banana Pi R2 Pro") ||
+      strstr(hardware, "BPI-R2 Pro") ||
+      strstr(hardware, "rk3568-bpi-r2pro"))
+    return bpi_find_board_by_name("bpi-r2-pro");
 
   return NULL;
 }
@@ -1325,6 +1360,147 @@ int renesas_setup(void)
     return SETUP_OK;
 }
 
+static int rockchip_is_pin(int pin)
+{
+    return pin >= ROCKCHIP_GPIO_PIN_BASE && pin <= ROCKCHIP_GPIO_PIN_END;
+}
+
+static volatile uint32_t *rockchip_bank_regs(int bank)
+{
+    if (bank < 0 || bank >= ROCKCHIP_GPIO_BANKS)
+        return NULL;
+
+    return rockchip_gpio_map[bank];
+}
+
+static int rockchip_gpio_mapped(void)
+{
+    int i;
+
+    for (i = 0; i < ROCKCHIP_GPIO_BANKS; ++i)
+        if (rockchip_gpio_map[i] == NULL)
+            return 0;
+
+    return 1;
+}
+
+static uint32_t rockchip_read_reg(int bank, int offset)
+{
+    volatile uint32_t *regs = rockchip_bank_regs(bank);
+
+    if (regs == NULL)
+        return 0;
+
+    return regs[offset >> 2] | (regs[(offset + 4) >> 2] << 16);
+}
+
+static void rockchip_write_bit(int bank, int offset, int bit, int value)
+{
+    volatile uint32_t *regs = rockchip_bank_regs(bank);
+    int half_bit;
+    uint32_t data;
+
+    if (regs == NULL)
+        return;
+
+    half_bit = bit & 0xf;
+    data = (value ? (1u << half_bit) : 0) | (1u << (half_bit + 16));
+    regs[(offset + (bit >= 16 ? 4 : 0)) >> 2] = data;
+}
+
+void rockchip_set_pullupdn(int pin, int pud)
+{
+    (void)pin;
+    (void)pud;
+}
+
+void rockchip_setup_gpio(int pin, int direction, int pud)
+{
+    int bank, bit;
+
+    rockchip_set_pullupdn(pin, pud);
+
+    if (!rockchip_is_pin(pin) || !rockchip_gpio_mapped())
+        return;
+
+    if (direction != INPUT && direction != OUTPUT)
+        return;
+
+    bank = pin >> 5;
+    bit = pin & 0x1f;
+    rockchip_write_bit(bank, ROCKCHIP_GPIO_SWPORT_DDR, bit, direction == OUTPUT);
+}
+
+int rockchip_gpio_function(int pin)
+{
+    int bank, bit;
+
+    if (!rockchip_is_pin(pin) || !rockchip_gpio_mapped())
+        return INPUT;
+
+    bank = pin >> 5;
+    bit = pin & 0x1f;
+
+    return (rockchip_read_reg(bank, ROCKCHIP_GPIO_SWPORT_DDR) & (1u << bit)) ? OUTPUT : INPUT;
+}
+
+void rockchip_output_gpio(int pin, int value)
+{
+    int bank, bit;
+
+    if (!rockchip_is_pin(pin) || !rockchip_gpio_mapped())
+        return;
+
+    bank = pin >> 5;
+    bit = pin & 0x1f;
+    rockchip_write_bit(bank, ROCKCHIP_GPIO_SWPORT_DR, bit, value != 0);
+}
+
+int rockchip_input_gpio(int pin)
+{
+    int bank, bit;
+
+    if (!rockchip_is_pin(pin) || !rockchip_gpio_mapped())
+        return 0;
+
+    bank = pin >> 5;
+    bit = pin & 0x1f;
+
+    return (rockchip_read_reg(bank, ROCKCHIP_GPIO_EXT_PORT) & (1u << bit)) ? 1 : 0;
+}
+
+int rockchip_setup(void)
+{
+    int mem_fd;
+    int i;
+
+    if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC)) < 0)
+        return SETUP_DEVMEM_FAIL;
+
+    for (i = 0; i < ROCKCHIP_GPIO_BANKS; ++i) {
+        rockchip_gpio_map[i] = (uint32_t *)mmap(NULL, ROCKCHIP_GPIO_MAP_SIZE,
+                                                PROT_READ|PROT_WRITE,
+                                                MAP_SHARED, mem_fd,
+                                                rockchip_gpio_base[i]);
+        if (rockchip_gpio_map[i] == MAP_FAILED) {
+            int j;
+
+            rockchip_gpio_map[i] = NULL;
+            for (j = 0; j < i; ++j) {
+                if (rockchip_gpio_map[j] != NULL) {
+                    munmap((void *)rockchip_gpio_map[j], ROCKCHIP_GPIO_MAP_SIZE);
+                    rockchip_gpio_map[j] = NULL;
+                }
+            }
+            close(mem_fd);
+            return SETUP_MMAP_FAIL;
+        }
+    }
+
+    close(mem_fd);
+    return SETUP_OK;
+}
+
 
 uint32_t sunxi_readl(volatile uint32_t *addr)
 {
@@ -1539,6 +1715,18 @@ void bpi_cleanup(void)
         return;
     }
 
+    if (bpi_found_rockchip == 1) {
+        int i;
+
+        for (i = 0; i < ROCKCHIP_GPIO_BANKS; ++i) {
+            if (rockchip_gpio_map[i] != NULL) {
+                munmap((void *)rockchip_gpio_map[i], ROCKCHIP_GPIO_MAP_SIZE);
+                rockchip_gpio_map[i] = NULL;
+            }
+        }
+        return;
+    }
+
     if (gpio_map != MAP_FAILED && gpio_map != NULL) {
         munmap((void *)gpio_map, BLOCK_SIZE);
         gpio_map = NULL;
@@ -1567,6 +1755,7 @@ int bpi_piGpioLayout (void)
   bpi_found_meson = 0;
   bpi_found_spacemit = 0;
   bpi_found_renesas = 0;
+  bpi_found_rockchip = 0;
   if ((bpiFd = fopen("/var/lib/bananapi/board.sh", "r")) != NULL) {
     while(fgets(buffer, sizeof(buffer), bpiFd) != NULL) {
       if (sscanf(buffer, "BOARD=%1023s", hardware) != 1)
@@ -1624,6 +1813,7 @@ int bpi_get_rpi_info(rpi_info *info)
                        board->model == BPI_MODEL_M2PRO);
     bpi_found_spacemit = (board->model == BPI_MODEL_F3);
     bpi_found_renesas = (board->model == BPI_MODEL_AI2N);
+    bpi_found_rockchip = (board->model == BPI_MODEL_R2PRO);
     sprintf(manufacturer, "%s", piMakerNames [board->maker]);
     info->p1_revision = 3;
     info->type = type;
@@ -1637,6 +1827,8 @@ int bpi_get_rpi_info(rpi_info *info)
 	info->processor = "SpacemiT K1";
     }else if (bpi_found_renesas == 1) {
 	info->processor = "Renesas RZ/V2N";
+    }else if (bpi_found_rockchip == 1) {
+	info->processor = "Rockchip RK3568";
     }else if (bpi_found_sun50iw9 == 1) {
 	info->processor = "AW SUN50IW9";
     }else{
