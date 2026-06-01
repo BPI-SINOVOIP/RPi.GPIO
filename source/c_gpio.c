@@ -68,6 +68,7 @@ extern int bpi_found_renesas;
 extern int bpi_found_rockchip;
 extern int bpi_found_realtek;
 extern int bpi_found_vs680;
+extern int bpi_found_sp7021;
 extern const int *pinTobcm_BP ;
 #endif
 
@@ -116,6 +117,9 @@ int setup(void)
 	}
 	if (bpi_found_vs680 == 1) {
             return vs680_setup();
+	}
+	if (bpi_found_sp7021 == 1) {
+            return sp7021_setup();
 	}
 	return sunxi_setup();
     }
@@ -334,6 +338,8 @@ void set_pullupdn(int gpio, int pud)
             realtek_set_pullupdn(gpio, pud);
         } else if (bpi_found_vs680 == 1) {
             vs680_set_pullupdn(gpio, pud);
+        } else if (bpi_found_sp7021 == 1) {
+            sp7021_set_pullupdn(gpio, pud);
         } else {
             sunxi_set_pullupdn(gpio, pud);
         }
@@ -407,6 +413,9 @@ void setup_gpio(int gpio, int direction, int pud)
 	}else if (bpi_found_vs680 == 1) {
 		vs680_setup_gpio(gpio, direction, pud);
 		return;
+	}else if (bpi_found_sp7021 == 1) {
+		sp7021_setup_gpio(gpio, direction, pud);
+		return;
 	}else{
 		return sunxi_setup_gpio(gpio, direction, pud);
 	}
@@ -447,6 +456,8 @@ int gpio_function(int gpio)
            return realtek_gpio_function(gpio);
        }else if (bpi_found_vs680 == 1) {
            return vs680_gpio_function(gpio);
+       }else if (bpi_found_sp7021 == 1) {
+           return sp7021_gpio_function(gpio);
        }else{
            return sunxi_gpio_function(gpio);
        }
@@ -489,6 +500,8 @@ void output_gpio(int gpio, int value)
 		realtek_output_gpio(gpio, value);
 	}else if (bpi_found_vs680 == 1) {
 		vs680_output_gpio(gpio, value);
+	}else if (bpi_found_sp7021 == 1) {
+		sp7021_output_gpio(gpio, value);
 	}else{
 	       sunxi_output_gpio(gpio, value);
 	}
@@ -533,6 +546,9 @@ int input_gpio(int gpio)
       }
       if (bpi_found_vs680 == 1) {
           return vs680_input_gpio(gpio);
+      }
+      if (bpi_found_sp7021 == 1) {
+          return sp7021_input_gpio(gpio);
       }
       return sunxi_input_gpio(gpio);
    }

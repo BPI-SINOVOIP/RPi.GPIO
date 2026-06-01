@@ -132,7 +132,7 @@ The supported IO surface is:
 | BPI-W2 | Realtek RTD1296 | done | Added RTD129x mmap backend using Armbian/vendor GPIO bases (`MISC=0x9801b100`, `ISO=0x98007100`) and the official BPI-W2 40-pin GPIO table; IGPIO pins map to Linux GPIO `101 + N`. Pull control remains no-op pending Realtek pinctrl validation. |
 | BPI-M4 plain | Realtek RTD1395 | done | Extended the Realtek backend for RTD1395 single ISO GPIO group (`0x98007100`, GPIO 0-56) and added the official BPI-M4 40-pin table. Pull control remains no-op pending Realtek pinctrl validation. |
 | BPI-M6 | Synaptics VS680 | done | Added VS680 DW APB GPIO mmap backend from Armbian/vendor DTS (`gpio0/1/2` and `sm_gpio0`) and the official BPI-M6 CON3 40-pin table. SoC GPIO and SM_GPIO header pins are supported; header pins routed through the FXL6408 I2C expander remain non-GPIO in this mmap backend pending a separate gpiod/sysfs expander path. Local extension build passed. |
-| BPI-F2S / BPI-F2P | Sunplus SP7021 | todo | Needs SP7021 GPIO backend and header map. |
+| BPI-F2S / BPI-F2P | Sunplus SP7021 | done | Added SP7021 GPIO mmap backend from Armbian/vendor pinctrl registers (`pctl@0x9C000100`, base0/base1/base2 register banks) and the F2S/F2P 40-pin map from the official schematics. Pull control remains no-op pending Sunplus pinctrl hardware validation. Local extension build passed. |
 | BPI-CM6 / BPI-SM10 | SpacemiT K1/K3 | todo | Reuse K1/K3 work after F3/SM10 source validation. |
 | BPI-M2C | UniSoC UIS7885 | blocked | Armbian path is PAC/hybrid; userspace GPIO support depends on usable kernel GPIO exposure. |
 
@@ -147,11 +147,11 @@ The supported IO surface is:
 
 ## Current Next Item
 
-Continue Batch D from `BPI-F2S / BPI-F2P`.
+Continue Batch D from `BPI-CM6 / BPI-SM10`.
 
 Resume sequence:
 
-1. Confirm Sunplus SP7021 GPIO access policy and BPI-F2S/F2P header map.
+1. Confirm SpacemiT K1/K3 GPIO numbering and BPI-CM6/SM10 carrier header map.
 2. Add one board or exact carrier alias set at a time in `BPI-WiringPi2`,
    build-test, commit, and push.
 3. Add the same board in this repo, build-test, commit, and push.

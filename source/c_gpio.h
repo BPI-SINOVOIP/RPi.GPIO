@@ -86,6 +86,12 @@ int vs680_gpio_function(int gpio);
 void vs680_output_gpio(int gpio, int value);
 int vs680_input_gpio(int gpio);
 void vs680_set_pullupdn(int gpio, int pud);
+int sp7021_setup(void);
+void sp7021_setup_gpio(int gpio, int direction, int pud);
+int sp7021_gpio_function(int gpio);
+void sp7021_output_gpio(int gpio, int value);
+int sp7021_input_gpio(int gpio);
+void sp7021_set_pullupdn(int gpio, int pud);
 void bpi_cleanup(void);
 #endif
 
