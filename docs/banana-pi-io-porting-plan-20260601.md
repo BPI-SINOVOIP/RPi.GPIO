@@ -105,7 +105,7 @@ The supported IO surface is:
 | BPI-M2S | Amlogic G12B | done | Added first Meson GPIO mmap backend, M2S aliases/model detection, and 40-pin map from Armbian DTS plus Dangku Amlogic reference maps; local extension build passed. |
 | BPI-CM4IO | Amlogic G12B | done | Reuses Meson backend from M2S; added CM4IO-specific carrier map from Dangku `bananapicm4`/legacy BSP, separate from `BPI-RPICM4`; local extension build passed. |
 | BPI-M5 | Amlogic SM1 | done | Reuses Meson backend; 40-pin map is from Dangku `bananapim5` and Armbian `meson-sm1-bananapi-m5`; local extension build passed. |
-| BPI-M2 Pro | Amlogic SM1 | todo | Likely M5-compatible alias; confirm separately against Armbian `meson-sm1-bananapi-m2-pro`. |
+| BPI-M2 Pro | Amlogic SM1 | alias | M5-compatible alias per Dangku M5/M2Pro handling and Armbian SM1 overlays; uses separate model id/name; local extension build passed. |
 | BPI-F3 | SpacemiT K1 | todo | Needs K1 GPIO backend and official header map. |
 | BPI-AI2N | Renesas RZ/V2N | todo | Needs RZ/V2N GPIO backend and Banana Pi header map. |
 

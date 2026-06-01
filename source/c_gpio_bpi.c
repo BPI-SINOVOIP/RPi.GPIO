@@ -78,7 +78,8 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_M2S        81
 #define BPI_MODEL_CM4IO      82
 #define BPI_MODEL_M5         83
-#define BPI_MODELS_MAX       84
+#define BPI_MODEL_M2PRO      84
+#define BPI_MODELS_MAX       85
 
 #define BPI_MAKER_SINOVOIP    6
 
@@ -229,6 +230,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_M2S]     = "Banana Pi M2S[Amlogic G12B]",
   [BPI_MODEL_CM4IO]   = "Banana Pi CM4IO[Amlogic G12B]",
   [BPI_MODEL_M5]      = "Banana Pi M5[Amlogic SM1]",
+  [BPI_MODEL_M2PRO]   = "Banana Pi M2 Pro[Amlogic SM1]",
 } ;
 
 char *piRevisionNames [16] =
@@ -396,6 +398,13 @@ struct BPIBoards bpiboard [] =
   { "bananapim5",  11601, BPI_MODEL_M5, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M5, physToGpio_BPI_M5, pinTobcm_BPI_M5 	},
   { "banana-pi-m5", 11601, BPI_MODEL_M5, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M5, physToGpio_BPI_M5, pinTobcm_BPI_M5 	},
   { "bananapi-m5", 11601, BPI_MODEL_M5, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M5, physToGpio_BPI_M5, pinTobcm_BPI_M5 	},
+  { "bpi-m2pro",   11701, BPI_MODEL_M2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M5, physToGpio_BPI_M5, pinTobcm_BPI_M5 	},
+  { "bpi-m2-pro",  11701, BPI_MODEL_M2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M5, physToGpio_BPI_M5, pinTobcm_BPI_M5 	},
+  { "bananapim2pro", 11701, BPI_MODEL_M2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M5, physToGpio_BPI_M5, pinTobcm_BPI_M5 	},
+  { "bananapi-m2pro", 11701, BPI_MODEL_M2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M5, physToGpio_BPI_M5, pinTobcm_BPI_M5 	},
+  { "bananapi-m2-pro", 11701, BPI_MODEL_M2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M5, physToGpio_BPI_M5, pinTobcm_BPI_M5 	},
+  { "banana-pi-m2pro", 11701, BPI_MODEL_M2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M5, physToGpio_BPI_M5, pinTobcm_BPI_M5 	},
+  { "banana-pi-m2-pro", 11701, BPI_MODEL_M2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M5, physToGpio_BPI_M5, pinTobcm_BPI_M5 	},
   { "bpi-r2",      11101, BPI_MODEL_R2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2,  physToGpio_BPI_R2,  pinTobcm_BPI_R2    },
   { NULL,		0, 0, 1, 2, BPI_MAKER_SINOVOIP, 0, NULL, NULL, NULL 	},
 } ;
@@ -446,6 +455,18 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "BananaPi M5") ||
       strstr(hardware, "BPI-M5"))
     return bpi_find_board_by_name("bpi-m5");
+
+  if (strstr(hardware, "Banana Pi BPI-M2-PRO") ||
+      strstr(hardware, "Banana Pi BPI-M2 Pro") ||
+      strstr(hardware, "BananaPi BPI-M2-PRO") ||
+      strstr(hardware, "BananaPi BPI-M2 Pro") ||
+      strstr(hardware, "Banana Pi M2Pro") ||
+      strstr(hardware, "Banana Pi M2 Pro") ||
+      strstr(hardware, "BananaPi M2Pro") ||
+      strstr(hardware, "BPI-M2-PRO") ||
+      strstr(hardware, "BPI-M2-Pro") ||
+      strstr(hardware, "BPI-M2 Pro"))
+    return bpi_find_board_by_name("bpi-m2pro");
 
   return NULL;
 }
@@ -1137,7 +1158,8 @@ int bpi_get_rpi_info(rpi_info *info)
     bpi_found_sun50iw9 = (board->model == BPI_MODEL_M4BERRY || board->model == BPI_MODEL_M4ZERO);
     bpi_found_meson = (board->model == BPI_MODEL_M2S ||
                        board->model == BPI_MODEL_CM4IO ||
-                       board->model == BPI_MODEL_M5);
+                       board->model == BPI_MODEL_M5 ||
+                       board->model == BPI_MODEL_M2PRO);
     sprintf(manufacturer, "%s", piMakerNames [board->maker]);
     info->p1_revision = 3;
     info->type = type;
