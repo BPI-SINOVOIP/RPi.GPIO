@@ -139,13 +139,13 @@ The supported IO surface is:
 
 ## Current Next Item
 
-Continue Batch B from `BPI-M5` / `BPI-M2 Pro`.
+Continue Batch B from `BPI-F3`.
 
 Resume sequence:
 
-1. Confirm the `BPI-M5` and `BPI-M2 Pro` SM1 maps against Dangku and Armbian
-   board strings.
-2. Add `BPI-M5` in `BPI-WiringPi2`, build-test, commit, and push.
-3. Add `BPI-M5` in this repo, build-test, commit, and push.
-4. Repeat for `BPI-M2 Pro` if its carrier map differs; otherwise add it as a
-   documented alias in both repos.
+1. Confirm the `BPI-F3` K1 GPIO numbering, register backend, and 40-pin map
+   against Armbian and Dangku/vendor references.
+2. Add `BPI-F3` in `BPI-WiringPi2`, build-test, commit, and push.
+3. Add `BPI-F3` in this repo, build-test, commit, and push.
+4. If the K1 mmap backend is not reliable from available sources, mark
+   `BPI-F3` blocked with the missing register/map item instead of guessing.
