@@ -62,7 +62,7 @@ static volatile uint32_t *gpio_map;
 #ifdef BPI
 extern int bpi_found;
 extern int bpi_found_mtk;
-extern int *pinTobcm_BP ;
+extern const int *pinTobcm_BP ;
 #endif
 
 void short_wait(void)
@@ -197,7 +197,7 @@ void clear_event_detect(int gpio)
 #ifdef BPI
     if( bpi_found == 1 ) {
         return;
-	} 
+    }
 #endif
     *(gpio_map+offset) |= (1 << shift);
     short_wait();
@@ -210,8 +210,8 @@ int eventdetected(int gpio)
 
 #ifdef BPI
     if( bpi_found == 1 ) {
-        return;
-	} 
+        return 0;
+    }
 #endif
     offset = EVENT_DETECT_OFFSET + (gpio/32);
     bit = (1 << (gpio%32));
@@ -372,11 +372,11 @@ int gpio_function(int gpio)
 #ifdef BPI
     if( bpi_found == 1 ) {
        gpio = *(pinTobcm_BP + gpio);
-	if(bpi_found_mtk == 1){
-		return;
-	}else{
-		return sunxi_gpio_function(gpio);
-	}
+       if(bpi_found_mtk == 1){
+           return INPUT;
+       }else{
+           return sunxi_gpio_function(gpio);
+       }
        
     }
     else {

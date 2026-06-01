@@ -24,6 +24,7 @@ SOFTWARE.
 #include <stdint.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/mman.h>
 #include <string.h>
 #include "cpuinfo.h"
@@ -130,9 +131,9 @@ static volatile uint32_t *r_pio_map;
 int bpi_found=-1;
 int bpi_found_mtk = 0;
 
-int *pinToGpio_BP ;
-int *physToGpio_BP ;
-int *pinTobcm_BP ;
+const int *pinToGpio_BP ;
+const int *physToGpio_BP ;
+const int *pinTobcm_BP ;
 
 
 static volatile uint32_t *r_gpio_map;
@@ -231,9 +232,9 @@ struct BPIBoards
   int mem;
   int maker;
   int warranty;
-  int *pinToGpio;
-  int *physToGpio;
-  int *pinTobcm;
+  const int *pinToGpio;
+  const int *physToGpio;
+  const int *pinTobcm;
 } ;
 
 /*
@@ -288,11 +289,11 @@ static uint8_t* gpio_mmap_reg = NULL;
 int mtk_set_gpio_out(unsigned int pin, unsigned int output)
 {
     uint32_t tmp;
-    uint32_t position = 0;
+    volatile uint32_t *position;
 
-    position = gpio_mmap_reg + MTK_GPIO_DOUT + (pin / 16) * 16;
-    printf("pin=%d, output = %d, positon = %X\n", pin, output, position);
-    tmp = *(volatile uint32_t*)(position);
+    position = (volatile uint32_t *)(gpio_mmap_reg + MTK_GPIO_DOUT + (pin / 16) * 16);
+    printf("pin=%d, output = %d, position = %p\n", pin, output, (void *)position);
+    tmp = *position;
     printf("tmp = %X\n", tmp);
     if(output == 1){
 	    tmp |= (1u << (pin % 16));
@@ -300,7 +301,7 @@ int mtk_set_gpio_out(unsigned int pin, unsigned int output)
 	    tmp &= ~(1u << (pin % 16));
     }
     printf("tmp = %X\n", tmp);
-    *(volatile uint32_t*)(position) = tmp;
+    *position = tmp;
     printf("finish mtk_set_gpio_out\n");
     return 1;
 
@@ -309,15 +310,15 @@ int mtk_set_gpio_out(unsigned int pin, unsigned int output)
 int mtk_set_gpio_dir(unsigned int pin, unsigned int dir)
 {
     uint32_t tmp;
-    uint32_t position = 0;
+    volatile uint32_t *position;
 
     if(pin < 199){
-        position = gpio_mmap_reg + (pin / 16) * 16;
+        position = (volatile uint32_t *)(gpio_mmap_reg + (pin / 16) * 16);
     }else{
-        position = gpio_mmap_reg + (pin / 16) * 16 + 0x10;
+        position = (volatile uint32_t *)(gpio_mmap_reg + (pin / 16) * 16 + 0x10);
     }
-    printf("pin=%d, dir=%d, positon = %X\n", pin, dir, position);
-    tmp = *(volatile uint32_t*)(position);
+    printf("pin=%d, dir=%d, position = %p\n", pin, dir, (void *)position);
+    tmp = *position;
     printf("tmp = %X\n", tmp);
     if(dir == 1){
         tmp |= (1u << (pin % 16));
@@ -325,25 +326,25 @@ int mtk_set_gpio_dir(unsigned int pin, unsigned int dir)
 	tmp &= ~(1u << (pin % 16));
     }
     printf("tmp = %X\n", tmp);
-    *(volatile uint32_t*)(position) = tmp;
+    *position = tmp;
     return 0;   
 
 }
 
 int mtk_set_gpio_mode(unsigned int pin, unsigned int mode){
     uint32_t tmp;
-    uint32_t position = 0;
-    position = gpio_mmap_reg + MTK_GPIO_MODE + (pin / 5) * 16;
+    volatile uint32_t *position;
+    position = (volatile uint32_t *)(gpio_mmap_reg + MTK_GPIO_MODE + (pin / 5) * 16);
 
-    printf("pin=%d, mode=%d, positon = %X\n", pin, mode, position);
-    tmp = *(volatile uint32_t*)(position);
+    printf("pin=%d, mode=%d, position = %p\n", pin, mode, (void *)position);
+    tmp = *position;
 
     printf("tmp = %X\n", tmp);
     tmp &= ~(1u << ((pin % 5) * 3));
     printf("tmp = %X\n", tmp);
 
-    *(volatile uint32_t*)(position) = tmp;
-    return ;
+    *position = tmp;
+    return 0;
 
 }
 
@@ -364,7 +365,7 @@ int mtk_setup(void)
         close(gpio_mmap_fd);
         return -1;
     }
-    printf("gpio_mmap_fd=%d, gpio_map=%x", gpio_mmap_fd, gpio_mmap_reg);
+    printf("gpio_mmap_fd=%d, gpio_map=%p", gpio_mmap_fd, (void *)gpio_mmap_reg);
 
     return SETUP_OK;
 
@@ -462,7 +463,7 @@ void sunxi_setup_gpio(int gpio, int direction, int pud)
       pio = &((sunxi_gpio_reg_t *) r_pio_map)->gpio_bank[bank];
     }
 
-    set_pullupdn(gpio, pud);
+    sunxi_set_pullupdn(gpio, pud);
 
     regval = *(&pio->CFG[0] + index);
     regval &= ~(0x7 << offset); // 0xf?
