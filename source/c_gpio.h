@@ -74,6 +74,12 @@ int rockchip_gpio_function(int gpio);
 void rockchip_output_gpio(int gpio, int value);
 int rockchip_input_gpio(int gpio);
 void rockchip_set_pullupdn(int gpio, int pud);
+int realtek_setup(void);
+void realtek_setup_gpio(int gpio, int direction, int pud);
+int realtek_gpio_function(int gpio);
+void realtek_output_gpio(int gpio, int value);
+int realtek_input_gpio(int gpio);
+void realtek_set_pullupdn(int gpio, int pud);
 void bpi_cleanup(void);
 #endif
 

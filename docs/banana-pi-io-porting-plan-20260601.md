@@ -129,7 +129,8 @@ The supported IO surface is:
 
 | Board group | SoC family | Status | Notes |
 | --- | --- | --- | --- |
-| BPI-W2 / BPI-M4 plain | Realtek RTD129x/RTD139x | todo | Needs legacy Realtek GPIO backend or sysfs-only policy. |
+| BPI-W2 | Realtek RTD1296 | done | Added RTD129x mmap backend using Armbian/vendor GPIO bases (`MISC=0x9801b100`, `ISO=0x98007100`) and the official BPI-W2 40-pin GPIO table; IGPIO pins map to Linux GPIO `101 + N`. Pull control remains no-op pending Realtek pinctrl validation. |
+| BPI-M4 plain | Realtek RTD1395 | todo | Reuse Realtek backend after confirming the plain M4 40-pin table and RTD1395 GPIO numbering. |
 | BPI-M6 | Synaptics VS680 | todo | Needs VS680 GPIO backend and header map. |
 | BPI-F2S / BPI-F2P | Sunplus SP7021 | todo | Needs SP7021 GPIO backend and header map. |
 | BPI-CM6 / BPI-SM10 | SpacemiT K1/K3 | todo | Reuse K1/K3 work after F3/SM10 source validation. |
@@ -146,11 +147,11 @@ The supported IO surface is:
 
 ## Current Next Item
 
-Continue Batch D from `BPI-W2 / BPI-M4 plain`.
+Continue Batch D from `BPI-M4 plain`.
 
 Resume sequence:
 
-1. Confirm Realtek RTD129x/RTD139x GPIO access policy for `BPI-W2 / BPI-M4 plain`.
+1. Confirm the plain M4 RTD1395 40-pin GPIO map.
 2. Add one board or exact carrier alias set at a time in `BPI-WiringPi2`,
    build-test, commit, and push.
 3. Add the same board in this repo, build-test, commit, and push.

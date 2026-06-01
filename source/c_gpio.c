@@ -66,6 +66,7 @@ extern int bpi_found_meson;
 extern int bpi_found_spacemit;
 extern int bpi_found_renesas;
 extern int bpi_found_rockchip;
+extern int bpi_found_realtek;
 extern const int *pinTobcm_BP ;
 #endif
 
@@ -108,6 +109,9 @@ int setup(void)
 	}
 	if (bpi_found_rockchip == 1) {
             return rockchip_setup();
+	}
+	if (bpi_found_realtek == 1) {
+            return realtek_setup();
 	}
 	return sunxi_setup();
     }
@@ -322,6 +326,8 @@ void set_pullupdn(int gpio, int pud)
             renesas_set_pullupdn(gpio, pud);
         } else if (bpi_found_rockchip == 1) {
             rockchip_set_pullupdn(gpio, pud);
+        } else if (bpi_found_realtek == 1) {
+            realtek_set_pullupdn(gpio, pud);
         } else {
             sunxi_set_pullupdn(gpio, pud);
         }
@@ -389,6 +395,9 @@ void setup_gpio(int gpio, int direction, int pud)
 	}else if (bpi_found_rockchip == 1) {
 		rockchip_setup_gpio(gpio, direction, pud);
 		return;
+	}else if (bpi_found_realtek == 1) {
+		realtek_setup_gpio(gpio, direction, pud);
+		return;
 	}else{
 		return sunxi_setup_gpio(gpio, direction, pud);
 	}
@@ -425,6 +434,8 @@ int gpio_function(int gpio)
            return renesas_gpio_function(gpio);
        }else if (bpi_found_rockchip == 1) {
            return rockchip_gpio_function(gpio);
+       }else if (bpi_found_realtek == 1) {
+           return realtek_gpio_function(gpio);
        }else{
            return sunxi_gpio_function(gpio);
        }
@@ -463,6 +474,8 @@ void output_gpio(int gpio, int value)
 		renesas_output_gpio(gpio, value);
 	}else if (bpi_found_rockchip == 1) {
 		rockchip_output_gpio(gpio, value);
+	}else if (bpi_found_realtek == 1) {
+		realtek_output_gpio(gpio, value);
 	}else{
 	       sunxi_output_gpio(gpio, value);
 	}
@@ -501,6 +514,9 @@ int input_gpio(int gpio)
       }
       if (bpi_found_rockchip == 1) {
           return rockchip_input_gpio(gpio);
+      }
+      if (bpi_found_realtek == 1) {
+          return realtek_input_gpio(gpio);
       }
       return sunxi_input_gpio(gpio);
    }

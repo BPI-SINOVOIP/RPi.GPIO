@@ -91,7 +91,8 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_M1SUPER    94
 #define BPI_MODEL_FORGE1     95
 #define BPI_MODEL_P2PRO      96
-#define BPI_MODELS_MAX       97
+#define BPI_MODEL_W2         97
+#define BPI_MODELS_MAX       98
 
 #define BPI_MAKER_SINOVOIP    6
 
@@ -230,6 +231,24 @@ static volatile uint32_t *gpio_map;
 #define ROCKCHIP_GPIO_SWPORT_DDR_V2		0x08
 #define ROCKCHIP_GPIO_EXT_PORT_V2		0x70
 
+#define REALTEK_GPIO_GROUPS			2
+#define REALTEK_GPIO_MAP_SIZE			0x100
+#define REALTEK_RTD129X_MISC_BASE		0x9801b100
+#define REALTEK_RTD129X_ISO_BASE		0x98007100
+#define REALTEK_RTD129X_MISC_PIN_BASE		0
+#define REALTEK_RTD129X_MISC_PIN_END		100
+#define REALTEK_RTD129X_ISO_PIN_BASE		101
+#define REALTEK_RTD129X_ISO_PIN_END		135
+
+struct realtek_gpio_group {
+    int pin_base;
+    int pin_end;
+    int map_index;
+    const int *dir_offset;
+    const int *dato_offset;
+    const int *dati_offset;
+};
+
 typedef struct sunxi_gpio {
     unsigned int CFG[4];
     unsigned int DAT;
@@ -270,6 +289,7 @@ int bpi_found_meson = 0;
 int bpi_found_spacemit = 0;
 int bpi_found_renesas = 0;
 int bpi_found_rockchip = 0;
+int bpi_found_realtek = 0;
 
 const int *pinToGpio_BP ;
 const int *physToGpio_BP ;
@@ -281,6 +301,7 @@ static volatile uint32_t *spacemit_gpio_map;
 static volatile uint32_t *spacemit_pinctrl_map;
 static volatile uint32_t *renesas_gpio_map;
 static volatile uint32_t *rockchip_gpio_map[ROCKCHIP_GPIO_BANKS] = { NULL };
+static volatile uint32_t *realtek_gpio_map[REALTEK_GPIO_GROUPS] = { NULL };
 static const off_t rockchip_gpio_base_rk3308[ROCKCHIP_GPIO_BANKS] = {
   0xff220000,
   0xff230000,
@@ -329,6 +350,38 @@ static int rockchip_gpio_v2 = 1;
 static int rockchip_gpio_swport_dr = ROCKCHIP_GPIO_SWPORT_DR_V2;
 static int rockchip_gpio_swport_ddr = ROCKCHIP_GPIO_SWPORT_DDR_V2;
 static int rockchip_gpio_ext_port = ROCKCHIP_GPIO_EXT_PORT_V2;
+static const int realtek_rtd129x_misc_dir[4] = { 0x00, 0x04, 0x08, 0x0c };
+static const int realtek_rtd129x_misc_dato[4] = { 0x10, 0x14, 0x18, 0x1c };
+static const int realtek_rtd129x_misc_dati[4] = { 0x20, 0x24, 0x28, 0x2c };
+static const int realtek_rtd129x_iso_dir[4] = { 0x00, 0x18, 0x00, 0x00 };
+static const int realtek_rtd129x_iso_dato[4] = { 0x04, 0x1c, 0x00, 0x00 };
+static const int realtek_rtd129x_iso_dati[4] = { 0x08, 0x20, 0x00, 0x00 };
+static const struct realtek_gpio_group realtek_rtd129x_groups[REALTEK_GPIO_GROUPS] = {
+    {
+        REALTEK_RTD129X_MISC_PIN_BASE,
+        REALTEK_RTD129X_MISC_PIN_END,
+        0,
+        realtek_rtd129x_misc_dir,
+        realtek_rtd129x_misc_dato,
+        realtek_rtd129x_misc_dati,
+    },
+    {
+        REALTEK_RTD129X_ISO_PIN_BASE,
+        REALTEK_RTD129X_ISO_PIN_END,
+        1,
+        realtek_rtd129x_iso_dir,
+        realtek_rtd129x_iso_dato,
+        realtek_rtd129x_iso_dati,
+    },
+};
+static const off_t realtek_gpio_base_rtd129x[REALTEK_GPIO_GROUPS] = {
+    REALTEK_RTD129X_MISC_BASE,
+    REALTEK_RTD129X_ISO_BASE,
+};
+static const struct realtek_gpio_group *realtek_gpio_groups = realtek_rtd129x_groups;
+static const off_t *realtek_gpio_base = realtek_gpio_base_rtd129x;
+static int realtek_gpio_group_count = REALTEK_GPIO_GROUPS;
+static size_t realtek_gpio_map_size = REALTEK_GPIO_MAP_SIZE;
 
 char *piModelNames [BPI_MODELS_MAX] =
 {
@@ -376,6 +429,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_M1SUPER] = "Banana Pi M1 Super[RK3528]",
   [BPI_MODEL_FORGE1]  = "Banana Pi Forge1[RK3506J]",
   [BPI_MODEL_P2PRO]   = "Banana Pi P2 Pro[RK3308]",
+  [BPI_MODEL_W2]      = "Banana Pi W2[RTD1296]",
 } ;
 
 char *piRevisionNames [16] =
@@ -624,6 +678,10 @@ struct BPIBoards bpiboard [] =
   { "bananapi-p2-pro", 12901, BPI_MODEL_P2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_P2PRO, physToGpio_BPI_P2PRO, pinTobcm_BPI_P2PRO 	},
   { "banana-pi-p2-pro", 12901, BPI_MODEL_P2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_P2PRO, physToGpio_BPI_P2PRO, pinTobcm_BPI_P2PRO 	},
   { "armsom-p2pro", 12901, BPI_MODEL_P2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_P2PRO, physToGpio_BPI_P2PRO, pinTobcm_BPI_P2PRO 	},
+  { "bpi-w2",      13001, BPI_MODEL_W2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_W2, physToGpio_BPI_W2, pinTobcm_BPI_W2 	},
+  { "bananapiw2",  13001, BPI_MODEL_W2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_W2, physToGpio_BPI_W2, pinTobcm_BPI_W2 	},
+  { "bananapi-w2", 13001, BPI_MODEL_W2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_W2, physToGpio_BPI_W2, pinTobcm_BPI_W2 	},
+  { "banana-pi-w2", 13001, BPI_MODEL_W2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_W2, physToGpio_BPI_W2, pinTobcm_BPI_W2 	},
   { "bpi-r2",      11101, BPI_MODEL_R2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2,  physToGpio_BPI_R2,  pinTobcm_BPI_R2    },
   { NULL,		0, 0, 1, 2, BPI_MAKER_SINOVOIP, 0, NULL, NULL, NULL 	},
 } ;
@@ -675,6 +733,21 @@ static int bpi_model_is_rockchip(int model)
       bpi_model_is_rk3528(model) ||
       bpi_model_is_rk3576(model) ||
       bpi_model_is_rk3588(model);
+}
+
+static int bpi_model_is_realtek(int model)
+{
+  return model == BPI_MODEL_W2;
+}
+
+static void bpi_select_realtek_backend(int model)
+{
+  (void)model;
+
+  realtek_gpio_base = realtek_gpio_base_rtd129x;
+  realtek_gpio_groups = realtek_rtd129x_groups;
+  realtek_gpio_group_count = REALTEK_GPIO_GROUPS;
+  realtek_gpio_map_size = REALTEK_GPIO_MAP_SIZE;
 }
 
 static void rockchip_select_gpio_v1_regs(void)
@@ -738,6 +811,15 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "Banana Pi BPI-M4 Berry") ||
       strstr(hardware, "BPI-M4Berry"))
     return bpi_find_board_by_name("bpi-m4berry");
+
+  if (strstr(hardware, "Banana Pi BPI-W2") ||
+      strstr(hardware, "BananaPi BPI-W2") ||
+      strstr(hardware, "Banana Pi W2") ||
+      strstr(hardware, "BananaPi W2") ||
+      strstr(hardware, "BPI-W2") ||
+      strstr(hardware, "rtd-1296-bananapi-w2") ||
+      strstr(hardware, "Realtek_RTD1296"))
+    return bpi_find_board_by_name("bpi-w2");
 
   if (strstr(hardware, "BananaPi BPI-M4-Zero") ||
       strstr(hardware, "Banana Pi BPI-M4-Zero") ||
@@ -1835,6 +1917,181 @@ int rockchip_setup(void)
     return SETUP_OK;
 }
 
+static const struct realtek_gpio_group *realtek_group_for_pin(int pin, int *local_pin)
+{
+    int i;
+
+    for (i = 0; i < realtek_gpio_group_count; ++i) {
+        const struct realtek_gpio_group *group = &realtek_gpio_groups[i];
+
+        if (pin < group->pin_base || pin > group->pin_end)
+            continue;
+
+        if (local_pin != NULL)
+            *local_pin = pin - group->pin_base;
+        return group;
+    }
+
+    return NULL;
+}
+
+static volatile uint32_t *realtek_group_regs(const struct realtek_gpio_group *group)
+{
+    if (group == NULL || group->map_index < 0 || group->map_index >= REALTEK_GPIO_GROUPS)
+        return NULL;
+
+    return realtek_gpio_map[group->map_index];
+}
+
+static int realtek_gpio_mapped(void)
+{
+    int i;
+
+    for (i = 0; i < realtek_gpio_group_count; ++i)
+        if (realtek_gpio_map[i] == NULL)
+            return 0;
+
+    return 1;
+}
+
+static uint32_t realtek_read_reg(const struct realtek_gpio_group *group, int offset)
+{
+    volatile uint32_t *regs = realtek_group_regs(group);
+
+    if (regs == NULL)
+        return 0;
+
+    return regs[offset >> 2];
+}
+
+static void realtek_write_bit(const struct realtek_gpio_group *group, int offset, int bit, int value)
+{
+    volatile uint32_t *regs = realtek_group_regs(group);
+    uint32_t data;
+
+    if (regs == NULL)
+        return;
+
+    data = regs[offset >> 2];
+    if (value)
+        data |= (1u << bit);
+    else
+        data &= ~(1u << bit);
+    regs[offset >> 2] = data;
+}
+
+void realtek_set_pullupdn(int pin, int pud)
+{
+    (void)pin;
+    (void)pud;
+}
+
+void realtek_setup_gpio(int pin, int direction, int pud)
+{
+    const struct realtek_gpio_group *group;
+    int local_pin, index, bit;
+
+    realtek_set_pullupdn(pin, pud);
+
+    if (!realtek_gpio_mapped())
+        return;
+
+    group = realtek_group_for_pin(pin, &local_pin);
+    if (group == NULL)
+        return;
+
+    if (direction != INPUT && direction != OUTPUT)
+        return;
+
+    index = local_pin >> 5;
+    bit = local_pin & 0x1f;
+    realtek_write_bit(group, group->dir_offset[index], bit, direction == OUTPUT);
+}
+
+int realtek_gpio_function(int pin)
+{
+    const struct realtek_gpio_group *group;
+    int local_pin, index, bit;
+
+    if (!realtek_gpio_mapped())
+        return INPUT;
+
+    group = realtek_group_for_pin(pin, &local_pin);
+    if (group == NULL)
+        return INPUT;
+
+    index = local_pin >> 5;
+    bit = local_pin & 0x1f;
+    return (realtek_read_reg(group, group->dir_offset[index]) & (1u << bit)) ? OUTPUT : INPUT;
+}
+
+void realtek_output_gpio(int pin, int value)
+{
+    const struct realtek_gpio_group *group;
+    int local_pin, index, bit;
+
+    if (!realtek_gpio_mapped())
+        return;
+
+    group = realtek_group_for_pin(pin, &local_pin);
+    if (group == NULL)
+        return;
+
+    index = local_pin >> 5;
+    bit = local_pin & 0x1f;
+    realtek_write_bit(group, group->dato_offset[index], bit, value != 0);
+}
+
+int realtek_input_gpio(int pin)
+{
+    const struct realtek_gpio_group *group;
+    int local_pin, index, bit, offset;
+
+    if (!realtek_gpio_mapped())
+        return 0;
+
+    group = realtek_group_for_pin(pin, &local_pin);
+    if (group == NULL)
+        return 0;
+
+    index = local_pin >> 5;
+    bit = local_pin & 0x1f;
+    offset = realtek_gpio_function(pin) == OUTPUT ? group->dato_offset[index] : group->dati_offset[index];
+    return (realtek_read_reg(group, offset) & (1u << bit)) ? 1 : 0;
+}
+
+int realtek_setup(void)
+{
+    int mem_fd;
+    int i;
+
+    if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC)) < 0)
+        return SETUP_DEVMEM_FAIL;
+
+    for (i = 0; i < realtek_gpio_group_count; ++i) {
+        realtek_gpio_map[i] = (uint32_t *)mmap(NULL, realtek_gpio_map_size,
+                                               PROT_READ|PROT_WRITE,
+                                               MAP_SHARED, mem_fd,
+                                               realtek_gpio_base[i]);
+        if (realtek_gpio_map[i] == MAP_FAILED) {
+            int j;
+
+            realtek_gpio_map[i] = NULL;
+            for (j = 0; j < i; ++j) {
+                if (realtek_gpio_map[j] != NULL) {
+                    munmap((void *)realtek_gpio_map[j], realtek_gpio_map_size);
+                    realtek_gpio_map[j] = NULL;
+                }
+            }
+            close(mem_fd);
+            return SETUP_MMAP_FAIL;
+        }
+    }
+
+    close(mem_fd);
+    return SETUP_OK;
+}
+
 
 uint32_t sunxi_readl(volatile uint32_t *addr)
 {
@@ -2061,6 +2318,18 @@ void bpi_cleanup(void)
         return;
     }
 
+    if (bpi_found_realtek == 1) {
+        int i;
+
+        for (i = 0; i < realtek_gpio_group_count; ++i) {
+            if (realtek_gpio_map[i] != NULL) {
+                munmap((void *)realtek_gpio_map[i], realtek_gpio_map_size);
+                realtek_gpio_map[i] = NULL;
+            }
+        }
+        return;
+    }
+
     if (gpio_map != MAP_FAILED && gpio_map != NULL) {
         munmap((void *)gpio_map, BLOCK_SIZE);
         gpio_map = NULL;
@@ -2090,6 +2359,7 @@ int bpi_piGpioLayout (void)
   bpi_found_spacemit = 0;
   bpi_found_renesas = 0;
   bpi_found_rockchip = 0;
+  bpi_found_realtek = 0;
   if ((bpiFd = fopen("/var/lib/bananapi/board.sh", "r")) != NULL) {
     while(fgets(buffer, sizeof(buffer), bpiFd) != NULL) {
       if (sscanf(buffer, "BOARD=%1023s", hardware) != 1)
@@ -2150,6 +2420,9 @@ int bpi_get_rpi_info(rpi_info *info)
     bpi_found_rockchip = bpi_model_is_rockchip(board->model);
     if (bpi_found_rockchip == 1)
         bpi_select_rockchip_backend(board->model);
+    bpi_found_realtek = bpi_model_is_realtek(board->model);
+    if (bpi_found_realtek == 1)
+        bpi_select_realtek_backend(board->model);
     sprintf(manufacturer, "%s", piMakerNames [board->maker]);
     info->p1_revision = 3;
     info->type = type;
@@ -2176,6 +2449,8 @@ int bpi_get_rpi_info(rpi_info *info)
 	    info->processor = "Rockchip RK3588";
 	else
 	    info->processor = "Rockchip RK3568";
+    }else if (bpi_found_realtek == 1) {
+	info->processor = "Realtek RTD1296";
     }else if (bpi_found_sun50iw9 == 1) {
 	info->processor = "AW SUN50IW9";
     }else{
