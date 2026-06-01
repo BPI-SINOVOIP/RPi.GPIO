@@ -93,7 +93,8 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_P2PRO      96
 #define BPI_MODEL_W2         97
 #define BPI_MODEL_M4         98
-#define BPI_MODELS_MAX       99
+#define BPI_MODEL_M6         99
+#define BPI_MODELS_MAX       100
 
 #define BPI_MAKER_SINOVOIP    6
 
@@ -244,6 +245,16 @@ static volatile uint32_t *gpio_map;
 #define REALTEK_RTD139X_ISO_PIN_BASE		0
 #define REALTEK_RTD139X_ISO_PIN_END		56
 
+#define VS680_GPIO_BANKS			4
+#define VS680_GPIO_MAP_SIZE			0x400
+#define VS680_GPIO_SOC_PIN_BASE		0
+#define VS680_GPIO_SOC_PIN_END			95
+#define VS680_GPIO_SM_PIN_BASE			96
+#define VS680_GPIO_SM_PIN_END			127
+#define VS680_GPIO_SWPORT_DR			0x00
+#define VS680_GPIO_SWPORT_DDR			0x04
+#define VS680_GPIO_EXT_PORT			0x50
+
 struct realtek_gpio_group {
     int pin_base;
     int pin_end;
@@ -294,6 +305,7 @@ int bpi_found_spacemit = 0;
 int bpi_found_renesas = 0;
 int bpi_found_rockchip = 0;
 int bpi_found_realtek = 0;
+int bpi_found_vs680 = 0;
 
 const int *pinToGpio_BP ;
 const int *physToGpio_BP ;
@@ -306,6 +318,7 @@ static volatile uint32_t *spacemit_pinctrl_map;
 static volatile uint32_t *renesas_gpio_map;
 static volatile uint32_t *rockchip_gpio_map[ROCKCHIP_GPIO_BANKS] = { NULL };
 static volatile uint32_t *realtek_gpio_map[REALTEK_GPIO_GROUPS] = { NULL };
+static volatile uint32_t *vs680_gpio_map[VS680_GPIO_BANKS] = { NULL };
 static const off_t rockchip_gpio_base_rk3308[ROCKCHIP_GPIO_BANKS] = {
   0xff220000,
   0xff230000,
@@ -396,6 +409,12 @@ static const off_t realtek_gpio_base_rtd139x[REALTEK_GPIO_GROUPS] = {
     REALTEK_RTD139X_ISO_BASE,
     0,
 };
+static const off_t vs680_gpio_base[VS680_GPIO_BANKS] = {
+    0xf7e82400,
+    0xf7e80800,
+    0xf7e80c00,
+    0xf7fc8000,
+};
 static const struct realtek_gpio_group *realtek_gpio_groups = realtek_rtd129x_groups;
 static const off_t *realtek_gpio_base = realtek_gpio_base_rtd129x;
 static int realtek_gpio_group_count = REALTEK_GPIO_GROUPS;
@@ -449,6 +468,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_P2PRO]   = "Banana Pi P2 Pro[RK3308]",
   [BPI_MODEL_W2]      = "Banana Pi W2[RTD1296]",
   [BPI_MODEL_M4]      = "Banana Pi M4[RTD1395]",
+  [BPI_MODEL_M6]      = "Banana Pi M6[Synaptics VS680]",
 } ;
 
 char *piRevisionNames [16] =
@@ -705,6 +725,10 @@ struct BPIBoards bpiboard [] =
   { "bananapim4",  13101, BPI_MODEL_M4, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M4, physToGpio_BPI_M4, pinTobcm_BPI_M4 	},
   { "bananapi-m4", 13101, BPI_MODEL_M4, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M4, physToGpio_BPI_M4, pinTobcm_BPI_M4 	},
   { "banana-pi-m4", 13101, BPI_MODEL_M4, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M4, physToGpio_BPI_M4, pinTobcm_BPI_M4 	},
+  { "bpi-m6",      13201, BPI_MODEL_M6, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M6, physToGpio_BPI_M6, pinTobcm_BPI_M6 	},
+  { "bananapim6",  13201, BPI_MODEL_M6, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M6, physToGpio_BPI_M6, pinTobcm_BPI_M6 	},
+  { "bananapi-m6", 13201, BPI_MODEL_M6, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M6, physToGpio_BPI_M6, pinTobcm_BPI_M6 	},
+  { "banana-pi-m6", 13201, BPI_MODEL_M6, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M6, physToGpio_BPI_M6, pinTobcm_BPI_M6 	},
   { "bpi-r2",      11101, BPI_MODEL_R2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2,  physToGpio_BPI_R2,  pinTobcm_BPI_R2    },
   { NULL,		0, 0, 1, 2, BPI_MAKER_SINOVOIP, 0, NULL, NULL, NULL 	},
 } ;
@@ -762,6 +786,11 @@ static int bpi_model_is_realtek(int model)
 {
   return model == BPI_MODEL_W2 ||
       model == BPI_MODEL_M4;
+}
+
+static int bpi_model_is_vs680(int model)
+{
+  return model == BPI_MODEL_M6;
 }
 
 static void bpi_select_realtek_backend(int model)
@@ -944,6 +973,15 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "BPI-M4") ||
       strstr(hardware, "rtd-1395-bananapi-m4"))
     return bpi_find_board_by_name("bpi-m4");
+
+  if (strstr(hardware, "Banana Pi BPI-M6") ||
+      strstr(hardware, "BananaPi BPI-M6") ||
+      strstr(hardware, "Banana Pi M6") ||
+      strstr(hardware, "BananaPi M6") ||
+      strstr(hardware, "BPI-M6") ||
+      strstr(hardware, "Synaptics VS680 EVK") ||
+      strstr(hardware, "vs680-a0-bananapi-m6"))
+    return bpi_find_board_by_name("bpi-m6");
 
   if (strstr(hardware, "Banana Pi BPI-M1 Super") ||
       strstr(hardware, "BananaPi BPI-M1 Super") ||
@@ -2131,6 +2169,164 @@ int realtek_setup(void)
     return SETUP_OK;
 }
 
+static int vs680_is_pin(int pin)
+{
+    return (pin >= VS680_GPIO_SOC_PIN_BASE && pin <= VS680_GPIO_SOC_PIN_END) ||
+        (pin >= VS680_GPIO_SM_PIN_BASE && pin <= VS680_GPIO_SM_PIN_END);
+}
+
+static int vs680_pin_bank(int pin)
+{
+    if (pin >= VS680_GPIO_SOC_PIN_BASE && pin <= VS680_GPIO_SOC_PIN_END)
+        return pin >> 5;
+
+    if (pin >= VS680_GPIO_SM_PIN_BASE && pin <= VS680_GPIO_SM_PIN_END)
+        return 3;
+
+    return -1;
+}
+
+static int vs680_pin_bit(int pin)
+{
+    if (pin >= VS680_GPIO_SM_PIN_BASE)
+        return pin - VS680_GPIO_SM_PIN_BASE;
+
+    return pin & 0x1f;
+}
+
+static int vs680_gpio_mapped(void)
+{
+    int i;
+
+    for (i = 0; i < VS680_GPIO_BANKS; ++i)
+        if (vs680_gpio_map[i] == NULL)
+            return 0;
+
+    return 1;
+}
+
+static uint32_t vs680_read_reg(int bank, int offset)
+{
+    volatile uint32_t *regs;
+
+    if (bank < 0 || bank >= VS680_GPIO_BANKS)
+        return 0;
+
+    regs = vs680_gpio_map[bank];
+    if (regs == NULL)
+        return 0;
+
+    return regs[offset >> 2];
+}
+
+static void vs680_write_bit(int bank, int offset, int bit, int value)
+{
+    volatile uint32_t *regs;
+    uint32_t data;
+
+    if (bank < 0 || bank >= VS680_GPIO_BANKS)
+        return;
+
+    regs = vs680_gpio_map[bank];
+    if (regs == NULL)
+        return;
+
+    data = regs[offset >> 2];
+    if (value)
+        data |= (1u << bit);
+    else
+        data &= ~(1u << bit);
+    regs[offset >> 2] = data;
+}
+
+void vs680_set_pullupdn(int pin, int pud)
+{
+    (void)pin;
+    (void)pud;
+}
+
+void vs680_setup_gpio(int pin, int direction, int pud)
+{
+    int bank, bit;
+
+    vs680_set_pullupdn(pin, pud);
+
+    if (!vs680_is_pin(pin) || !vs680_gpio_mapped())
+        return;
+
+    bank = vs680_pin_bank(pin);
+    bit = vs680_pin_bit(pin);
+    vs680_write_bit(bank, VS680_GPIO_SWPORT_DDR, bit, direction == OUTPUT);
+}
+
+int vs680_gpio_function(int pin)
+{
+    int bank, bit;
+
+    if (!vs680_is_pin(pin) || !vs680_gpio_mapped())
+        return INPUT;
+
+    bank = vs680_pin_bank(pin);
+    bit = vs680_pin_bit(pin);
+    return (vs680_read_reg(bank, VS680_GPIO_SWPORT_DDR) & (1u << bit)) ? OUTPUT : INPUT;
+}
+
+void vs680_output_gpio(int pin, int value)
+{
+    int bank, bit;
+
+    if (!vs680_is_pin(pin) || !vs680_gpio_mapped())
+        return;
+
+    bank = vs680_pin_bank(pin);
+    bit = vs680_pin_bit(pin);
+    vs680_write_bit(bank, VS680_GPIO_SWPORT_DR, bit, value != 0);
+}
+
+int vs680_input_gpio(int pin)
+{
+    int bank, bit;
+
+    if (!vs680_is_pin(pin) || !vs680_gpio_mapped())
+        return 0;
+
+    bank = vs680_pin_bank(pin);
+    bit = vs680_pin_bit(pin);
+    return (vs680_read_reg(bank, VS680_GPIO_EXT_PORT) & (1u << bit)) ? 1 : 0;
+}
+
+int vs680_setup(void)
+{
+    int mem_fd;
+    int i;
+
+    if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC)) < 0)
+        return SETUP_DEVMEM_FAIL;
+
+    for (i = 0; i < VS680_GPIO_BANKS; ++i) {
+        vs680_gpio_map[i] = (uint32_t *)mmap(NULL, VS680_GPIO_MAP_SIZE,
+                                             PROT_READ|PROT_WRITE,
+                                             MAP_SHARED, mem_fd,
+                                             vs680_gpio_base[i]);
+        if (vs680_gpio_map[i] == MAP_FAILED) {
+            int j;
+
+            vs680_gpio_map[i] = NULL;
+            for (j = 0; j < i; ++j) {
+                if (vs680_gpio_map[j] != NULL) {
+                    munmap((void *)vs680_gpio_map[j], VS680_GPIO_MAP_SIZE);
+                    vs680_gpio_map[j] = NULL;
+                }
+            }
+            close(mem_fd);
+            return SETUP_MMAP_FAIL;
+        }
+    }
+
+    close(mem_fd);
+    return SETUP_OK;
+}
+
 
 uint32_t sunxi_readl(volatile uint32_t *addr)
 {
@@ -2369,6 +2565,18 @@ void bpi_cleanup(void)
         return;
     }
 
+    if (bpi_found_vs680 == 1) {
+        int i;
+
+        for (i = 0; i < VS680_GPIO_BANKS; ++i) {
+            if (vs680_gpio_map[i] != NULL) {
+                munmap((void *)vs680_gpio_map[i], VS680_GPIO_MAP_SIZE);
+                vs680_gpio_map[i] = NULL;
+            }
+        }
+        return;
+    }
+
     if (gpio_map != MAP_FAILED && gpio_map != NULL) {
         munmap((void *)gpio_map, BLOCK_SIZE);
         gpio_map = NULL;
@@ -2399,6 +2607,7 @@ int bpi_piGpioLayout (void)
   bpi_found_renesas = 0;
   bpi_found_rockchip = 0;
   bpi_found_realtek = 0;
+  bpi_found_vs680 = 0;
   if ((bpiFd = fopen("/var/lib/bananapi/board.sh", "r")) != NULL) {
     while(fgets(buffer, sizeof(buffer), bpiFd) != NULL) {
       if (sscanf(buffer, "BOARD=%1023s", hardware) != 1)
@@ -2462,6 +2671,7 @@ int bpi_get_rpi_info(rpi_info *info)
     bpi_found_realtek = bpi_model_is_realtek(board->model);
     if (bpi_found_realtek == 1)
         bpi_select_realtek_backend(board->model);
+    bpi_found_vs680 = bpi_model_is_vs680(board->model);
     sprintf(manufacturer, "%s", piMakerNames [board->maker]);
     info->p1_revision = 3;
     info->type = type;
@@ -2493,6 +2703,8 @@ int bpi_get_rpi_info(rpi_info *info)
 	    info->processor = "Realtek RTD1395";
 	else
 	    info->processor = "Realtek RTD1296";
+    }else if (bpi_found_vs680 == 1) {
+	info->processor = "Synaptics VS680";
     }else if (bpi_found_sun50iw9 == 1) {
 	info->processor = "AW SUN50IW9";
     }else{
