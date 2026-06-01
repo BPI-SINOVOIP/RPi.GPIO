@@ -296,7 +296,11 @@ void set_pullupdn(int gpio, int pud)
 #ifdef BPI
     if( bpi_found == 1 ) {
         gpio = *(pinTobcm_BP + gpio);
-        sunxi_set_pullupdn(gpio, pud);
+        if (bpi_found_mtk == 1) {
+            mtk_set_pullupdn(gpio, pud);
+        } else {
+            sunxi_set_pullupdn(gpio, pud);
+        }
         return;
     }
 #endif
@@ -345,6 +349,9 @@ void setup_gpio(int gpio, int direction, int pud)
     if( bpi_found == 1 ) {
         gpio = *(pinTobcm_BP + gpio);
 	if(bpi_found_mtk == 1){
+		mtk_set_gpio_mode(gpio, 0);
+		mtk_set_gpio_dir(gpio, direction == OUTPUT ? 1 : 0);
+		mtk_set_pullupdn(gpio, pud);
 		return;
 	}else{
 		return sunxi_setup_gpio(gpio, direction, pud);
@@ -373,7 +380,7 @@ int gpio_function(int gpio)
     if( bpi_found == 1 ) {
        gpio = *(pinTobcm_BP + gpio);
        if(bpi_found_mtk == 1){
-           return INPUT;
+           return mtk_gpio_function(gpio);
        }else{
            return sunxi_gpio_function(gpio);
        }
@@ -428,6 +435,9 @@ int input_gpio(int gpio)
 #ifdef BPI
    if ( bpi_found == 1)  {
       gpio = *(pinTobcm_BP + gpio);
+      if (bpi_found_mtk == 1) {
+          return mtk_input_gpio(gpio);
+      }
       return sunxi_input_gpio(gpio);
    }
 #endif	
@@ -439,5 +449,11 @@ int input_gpio(int gpio)
 
 void cleanup(void)
 {
+#ifdef BPI
+    if (bpi_found == 1) {
+        bpi_cleanup();
+        return;
+    }
+#endif
     munmap((void *)gpio_map, BLOCK_SIZE);
 }

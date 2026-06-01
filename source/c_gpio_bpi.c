@@ -91,9 +91,13 @@ static volatile uint32_t *gpio_map;
 #define MTK_GPIO_BASE_ADDR		0x10005000
 #define MTK_GPIO_DIR				0x00
 #define MTK_GPIO_PULLE          		0x150
+#define MTK_GPIO_PULLSEL			0x280
 #define MTK_GPIO_DOUT				0x500
 #define MTK_GPIO_DIN				0x630
 #define MTK_GPIO_MODE				0x760
+#define MTK_GPIO_MAP_SIZE			(8 * 1024)
+#define MTK_GPIO_MODE_PINS_PER_REG		5
+#define MTK_GPIO_FIELD_PINS_PER_REG		16
 
 typedef struct sunxi_gpio {
     unsigned int CFG[4];
@@ -286,66 +290,133 @@ struct BPIBoards bpiboard [] =
 
 static uint8_t* gpio_mmap_reg = NULL;
 
-int mtk_set_gpio_out(unsigned int pin, unsigned int output)
+static volatile uint32_t *mtk_gpio_reg(unsigned int offset)
+{
+    return (volatile uint32_t *)(gpio_mmap_reg + offset);
+}
+
+static int mtk_gpio_mapped(void)
+{
+    return gpio_mmap_reg != NULL;
+}
+
+static unsigned int mtk_gpio_field_offset(unsigned int base, unsigned int pin)
+{
+    return base + (pin / MTK_GPIO_FIELD_PINS_PER_REG) * 0x10;
+}
+
+static unsigned int mtk_gpio_field_shift(unsigned int pin)
+{
+    return pin % MTK_GPIO_FIELD_PINS_PER_REG;
+}
+
+static unsigned int mtk_gpio_dir_offset(unsigned int pin, unsigned int *shift)
+{
+    if (pin <= 175) {
+        *shift = pin % MTK_GPIO_FIELD_PINS_PER_REG;
+        return MTK_GPIO_DIR + (pin / MTK_GPIO_FIELD_PINS_PER_REG) * 0x10;
+    }
+
+    *shift = (pin - 176) % MTK_GPIO_FIELD_PINS_PER_REG;
+    return 0xc0 + ((pin - 176) / MTK_GPIO_FIELD_PINS_PER_REG) * 0x10;
+}
+
+static int mtk_update_bit(unsigned int offset, unsigned int shift, unsigned int value)
 {
     uint32_t tmp;
-    volatile uint32_t *position;
+    volatile uint32_t *position = mtk_gpio_reg(offset);
 
-    position = (volatile uint32_t *)(gpio_mmap_reg + MTK_GPIO_DOUT + (pin / 16) * 16);
-    printf("pin=%d, output = %d, position = %p\n", pin, output, (void *)position);
     tmp = *position;
-    printf("tmp = %X\n", tmp);
-    if(output == 1){
-	    tmp |= (1u << (pin % 16));
+    if (value) {
+        tmp |= (1u << shift);
     }else{
-	    tmp &= ~(1u << (pin % 16));
+        tmp &= ~(1u << shift);
     }
-    printf("tmp = %X\n", tmp);
     *position = tmp;
-    printf("finish mtk_set_gpio_out\n");
-    return 1;
+    return 0;
+}
 
+int mtk_set_gpio_out(unsigned int pin, unsigned int output)
+{
+    if (!mtk_gpio_mapped())
+        return -1;
+
+    return mtk_update_bit(mtk_gpio_field_offset(MTK_GPIO_DOUT, pin),
+                          mtk_gpio_field_shift(pin), output);
 }
 
 int mtk_set_gpio_dir(unsigned int pin, unsigned int dir)
 {
-    uint32_t tmp;
-    volatile uint32_t *position;
+    unsigned int offset;
+    unsigned int shift;
 
-    if(pin < 199){
-        position = (volatile uint32_t *)(gpio_mmap_reg + (pin / 16) * 16);
-    }else{
-        position = (volatile uint32_t *)(gpio_mmap_reg + (pin / 16) * 16 + 0x10);
-    }
-    printf("pin=%d, dir=%d, position = %p\n", pin, dir, (void *)position);
-    tmp = *position;
-    printf("tmp = %X\n", tmp);
-    if(dir == 1){
-        tmp |= (1u << (pin % 16));
-    }else{
-	tmp &= ~(1u << (pin % 16));
-    }
-    printf("tmp = %X\n", tmp);
-    *position = tmp;
-    return 0;   
+    if (!mtk_gpio_mapped())
+        return -1;
+
+    offset = mtk_gpio_dir_offset(pin, &shift);
+    return mtk_update_bit(offset, shift, dir);
 
 }
 
 int mtk_set_gpio_mode(unsigned int pin, unsigned int mode){
     uint32_t tmp;
     volatile uint32_t *position;
-    position = (volatile uint32_t *)(gpio_mmap_reg + MTK_GPIO_MODE + (pin / 5) * 16);
+    unsigned int shift;
 
-    printf("pin=%d, mode=%d, position = %p\n", pin, mode, (void *)position);
+    if (!mtk_gpio_mapped())
+        return -1;
+
+    position = mtk_gpio_reg(MTK_GPIO_MODE + (pin / MTK_GPIO_MODE_PINS_PER_REG) * 0x10);
+    shift = (pin % MTK_GPIO_MODE_PINS_PER_REG) * 3;
+
     tmp = *position;
-
-    printf("tmp = %X\n", tmp);
-    tmp &= ~(1u << ((pin % 5) * 3));
-    printf("tmp = %X\n", tmp);
-
+    tmp &= ~(0x7u << shift);
+    tmp |= ((mode & 0x7u) << shift);
     *position = tmp;
     return 0;
 
+}
+
+int mtk_set_pullupdn(unsigned int pin, int pud)
+{
+    unsigned int shift = mtk_gpio_field_shift(pin);
+
+    if (!mtk_gpio_mapped())
+        return -1;
+
+    if (pud == PUD_OFF)
+        return mtk_update_bit(mtk_gpio_field_offset(MTK_GPIO_PULLE, pin), shift, 0);
+
+    mtk_update_bit(mtk_gpio_field_offset(MTK_GPIO_PULLSEL, pin), shift, pud == PUD_UP);
+    return mtk_update_bit(mtk_gpio_field_offset(MTK_GPIO_PULLE, pin), shift, 1);
+}
+
+int mtk_gpio_function(unsigned int pin)
+{
+    uint32_t mode;
+    unsigned int offset;
+    unsigned int shift;
+
+    if (!mtk_gpio_mapped())
+        return 0;
+
+    offset = MTK_GPIO_MODE + (pin / MTK_GPIO_MODE_PINS_PER_REG) * 0x10;
+    shift = (pin % MTK_GPIO_MODE_PINS_PER_REG) * 3;
+    mode = (*mtk_gpio_reg(offset) >> shift) & 0x7u;
+    if (mode != 0)
+        return mode;
+
+    offset = mtk_gpio_dir_offset(pin, &shift);
+    return ((*mtk_gpio_reg(offset) >> shift) & 0x1u) ? 1 : 0;
+}
+
+int mtk_input_gpio(unsigned int pin)
+{
+    if (!mtk_gpio_mapped())
+        return 0;
+
+    return (*mtk_gpio_reg(mtk_gpio_field_offset(MTK_GPIO_DIN, pin)) >>
+            mtk_gpio_field_shift(pin)) & 0x1u;
 }
 
 int mtk_setup(void)
@@ -356,7 +427,7 @@ int mtk_setup(void)
         return -1;
     }
     
-      gpio_mmap_reg = (uint8_t*)mmap(NULL, 8 * 1024, PROT_READ | PROT_WRITE,
+      gpio_mmap_reg = (uint8_t*)mmap(NULL, MTK_GPIO_MAP_SIZE, PROT_READ | PROT_WRITE,
         MAP_FILE | MAP_SHARED, gpio_mmap_fd, 0x10005000);
     if (gpio_mmap_reg == MAP_FAILED) {
         perror("foo");
@@ -365,7 +436,7 @@ int mtk_setup(void)
         close(gpio_mmap_fd);
         return -1;
     }
-    printf("gpio_mmap_fd=%d, gpio_map=%p", gpio_mmap_fd, (void *)gpio_mmap_reg);
+    close(gpio_mmap_fd);
 
     return SETUP_OK;
 
@@ -535,6 +606,27 @@ int sunxi_input_gpio(int gpio)
     regval = regval >> num;
     regval &= 1;
     return regval;
+}
+
+void bpi_cleanup(void)
+{
+    if (bpi_found_mtk == 1) {
+        if (gpio_mmap_reg != NULL) {
+            munmap((void *)gpio_mmap_reg, MTK_GPIO_MAP_SIZE);
+            gpio_mmap_reg = NULL;
+        }
+        return;
+    }
+
+    if (gpio_map != MAP_FAILED && gpio_map != NULL) {
+        munmap((void *)gpio_map, BLOCK_SIZE);
+        gpio_map = NULL;
+    }
+
+    if (r_gpio_map != MAP_FAILED && r_gpio_map != NULL) {
+        munmap((void *)r_gpio_map, BLOCK_SIZE);
+        r_gpio_map = NULL;
+    }
 }
 
 int bpi_piGpioLayout (void)

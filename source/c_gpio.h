@@ -45,6 +45,12 @@ int sunxi_input_gpio(int gpio);
 void sunxi_set_pullupdn(int gpio, int pud);
 int mtk_setup(void);
 int mtk_set_gpio_out(unsigned int pin, unsigned int output);
+int mtk_set_gpio_dir(unsigned int pin, unsigned int dir);
+int mtk_set_gpio_mode(unsigned int pin, unsigned int mode);
+int mtk_set_pullupdn(unsigned int pin, int pud);
+int mtk_gpio_function(unsigned int pin);
+int mtk_input_gpio(unsigned int pin);
+void bpi_cleanup(void);
 #endif
 
 #define SETUP_OK           0
