@@ -56,6 +56,25 @@ static volatile uint32_t *gpio_map;
 
 
 #ifdef BPI
+#define BPI_MODEL_MIN        64
+#define BPI_MODEL_M1         64
+#define BPI_MODEL_M1P        65
+#define BPI_MODEL_R1         66
+#define BPI_MODEL_M2         67
+#define BPI_MODEL_M3         68
+#define BPI_MODEL_M2P        69
+#define BPI_MODEL_M64        70
+#define BPI_MODEL_M2U        71
+#define BPI_MODEL_M2M        72
+#define BPI_MODEL_M2P_H2P    73
+#define BPI_MODEL_M2P_H5     74
+#define BPI_MODEL_M2U_V40    75
+#define BPI_MODEL_M2Z        76
+#define BPI_MODEL_R2         77
+#define BPI_MODELS_MAX       80
+
+#define BPI_MAKER_SINOVOIP    6
+
 #define SUNXI_R_GPIO_BASE	0x01F02000
 #define SUNXI_R_GPIO_REG_OFFSET   0xC00
 #define SUNXI_GPIO_BASE		0x01C20000
@@ -118,46 +137,33 @@ int *pinTobcm_BP ;
 
 static volatile uint32_t *r_gpio_map;
 
-char *piModelNames [64] =
+char *piModelNames [BPI_MODELS_MAX] =
 {
-  "Model A",	//  0
-  "Model B",	//  1
-  "Model A+",	//  2
-  "Model B+",	//  3
-  "Pi 2",	//  4
-  "Alpha",	//  5
-  "CM",		//  6
-  "Unknown07",	// 07
-  "Pi 3",	// 08
-  "Pi Zero",	// 09
-  "CM3",	// 10
-  "Unknown11",	// 11
-  "Pi Zero-W",	// 12
-  "Unknown13",	// 13
-  "Unknown14",	// 14
-  "Unknown15",	// 15
-#ifdef BPI
-  "Banana Pi[New]",	// 16
-  "Banana Pi[X86]",	// 17
-  "Raspbery Pi[RPI]",	// 18
-  "Raspbery Pi[RPI2]",	// 19
-  "Raspbery Pi[RPI3]",	// 20
-  "Banana Pi M1[A20]",	// 21	
-  "Banana Pi M1+[A20]",	// 22
-  "Banana Pi R1[A20]",	// 23
-  "Banana Pi M2[A31s]",	// 24
-  "Banana Pi M3[A83T]",	// 25
-  "Banana Pi M2+[H3]",	// 26
-  "Banana Pi M64[A64]",	// 27
-  "Banana Pi M2 Ultra[R40]",	// 28
-  "Banana Pi M2 Magic[R16]",	// 29
-  "Banana Pi M2+[H2+]",	// 30
-  "Banana Pi M2+[H5]",	// 31
-  "Banana Pi M2 Ultra[V40]",	// 32
-  "Banana Pi M2 Zero[H2+/H3]",	// 33
-  "Banana Pi R2[MT7623]", //34
-  NULL,
-#endif
+  [0] = "Model A",
+  [1] = "Model B",
+  [2] = "Model A+",
+  [3] = "Model B+",
+  [4] = "Pi 2",
+  [5] = "Alpha",
+  [6] = "CM",
+  [8] = "Pi 3",
+  [9] = "Pi Zero",
+  [10] = "CM3",
+  [12] = "Pi Zero-W",
+  [BPI_MODEL_M1]      = "Banana Pi M1[A20]",
+  [BPI_MODEL_M1P]     = "Banana Pi M1+[A20]",
+  [BPI_MODEL_R1]      = "Banana Pi R1[A20]",
+  [BPI_MODEL_M2]      = "Banana Pi M2[A31s]",
+  [BPI_MODEL_M3]      = "Banana Pi M3[A83T]",
+  [BPI_MODEL_M2P]     = "Banana Pi M2+[H3]",
+  [BPI_MODEL_M64]     = "Banana Pi M64[A64]",
+  [BPI_MODEL_M2U]     = "Banana Pi M2 Ultra[R40]",
+  [BPI_MODEL_M2M]     = "Banana Pi M2 Magic[R16]",
+  [BPI_MODEL_M2P_H2P] = "Banana Pi M2+[H2+]",
+  [BPI_MODEL_M2P_H5]  = "Banana Pi M2+[H5]",
+  [BPI_MODEL_M2U_V40] = "Banana Pi M2 Ultra[V40]",
+  [BPI_MODEL_M2Z]     = "Banana Pi M2 Zero[H2+/H3]",
+  [BPI_MODEL_R2]      = "Banana Pi R2[MT7623]",
 } ;
 
 char *piRevisionNames [16] =
@@ -187,12 +193,8 @@ char *piMakerNames [16] =
   "Embest",	//	 2
   "Unknown",	//	 3
   "Embest",	//	 4
-#ifdef BPI
-  "BPI-Sinovoip",	//	 5
-#else
-  "Unknown05",	//	 5
-#endif
-  "Unknown06",	//	 6
+  "Stadium",	//	 5
+  "BPI-Sinovoip",	//	 6
   "Unknown07",	//	 7
   "Unknown08",	//	 8
   "Unknown09",	//	 9
@@ -262,21 +264,21 @@ struct BPIBoards bpiboard [] =
   { "bpi-rpi",	      -1, 18, 1, 2, 5, 0, NULL, NULL, NULL 	},
   { "bpi-rpi2",	      -1, 19, 1, 2, 5, 0, NULL, NULL, NULL 	},
   { "bpi-rpi3",	      -1, 20, 1, 2, 5, 0, NULL, NULL, NULL 	},
-  { "bpi-m1",	   10001, 21, 1, 2, 5, 0, pinToGpio_BPI_M1P, physToGpio_BPI_M1P, pinTobcm_BPI_M1P 	},
-  { "bpi-m1p",	   10001, 22, 1, 2, 5, 0, pinToGpio_BPI_M1P, physToGpio_BPI_M1P, pinTobcm_BPI_M1P 	},
-  { "bpi-r1",	   10001, 23, 1, 2, 5, 0, pinToGpio_BPI_M1P, physToGpio_BPI_M1P, pinTobcm_BPI_M1P 	},
-  { "bpi-m2",	   10101, 24, 1, 2, 5, 0, pinToGpio_BPI_M2, physToGpio_BPI_M2, pinTobcm_BPI_M2 	},
-  { "bpi-m3",	   10201, 25, 1, 3, 5, 0, pinToGpio_BPI_M3, physToGpio_BPI_M3, pinTobcm_BPI_M3 	},
-  { "bpi-m2p",	   10301, 26, 1, 2, 5, 0, pinToGpio_BPI_M2P, physToGpio_BPI_M2P, pinTobcm_BPI_M2P 	},
-  { "bpi-m64",	   10401, 27, 1, 3, 5, 0, pinToGpio_BPI_M64, physToGpio_BPI_M64, pinTobcm_BPI_M64 	},
-  { "bpi-m2u",	   10501, 28, 1, 3, 5, 0, pinToGpio_BPI_M2U, physToGpio_BPI_M2U, pinTobcm_BPI_M2U 	},
-  { "bpi-m2m",	   10601, 29, 1, 1, 5, 0, pinToGpio_BPI_M2M, physToGpio_BPI_M2M, pinTobcm_BPI_M2M 	},
-  { "bpi-m2p_H2+", 10701, 30, 1, 2, 5, 0, pinToGpio_BPI_M2P, physToGpio_BPI_M2P, pinTobcm_BPI_M2P 	},
-  { "bpi-m2p_H5",  10801, 31, 1, 2, 5, 0, pinToGpio_BPI_M2P, physToGpio_BPI_M2P, pinTobcm_BPI_M2P 	},
-  { "bpi-m2u_V40", 10901, 32, 1, 3, 5, 0, pinToGpio_BPI_M2U, physToGpio_BPI_M2U, pinTobcm_BPI_M2U 	},
-  { "bpi-m2z",	   11001, 33, 1, 1, 5, 0, pinToGpio_BPI_M2P, physToGpio_BPI_M2P, pinTobcm_BPI_M2P 	},
-  { "bpi-r2",      11101, 34, 1, 3, 5, 0, pinToGpio_BPI_R2,  physToGpio_BPI_R2,  pinTobcm_BPI_R2    },
-  { NULL,		0, 0, 1, 2, 5, 0, NULL, NULL, NULL 	},
+  { "bpi-m1",	   10001, BPI_MODEL_M1, 1, 2, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M1P, physToGpio_BPI_M1P, pinTobcm_BPI_M1P 	},
+  { "bpi-m1p",	   10001, BPI_MODEL_M1P, 1, 2, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M1P, physToGpio_BPI_M1P, pinTobcm_BPI_M1P 	},
+  { "bpi-r1",	   10001, BPI_MODEL_R1, 1, 2, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M1P, physToGpio_BPI_M1P, pinTobcm_BPI_M1P 	},
+  { "bpi-m2",	   10101, BPI_MODEL_M2, 1, 2, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2, physToGpio_BPI_M2, pinTobcm_BPI_M2 	},
+  { "bpi-m3",	   10201, BPI_MODEL_M3, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M3, physToGpio_BPI_M3, pinTobcm_BPI_M3 	},
+  { "bpi-m2p",	   10301, BPI_MODEL_M2P, 1, 2, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2P, physToGpio_BPI_M2P, pinTobcm_BPI_M2P 	},
+  { "bpi-m64",	   10401, BPI_MODEL_M64, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M64, physToGpio_BPI_M64, pinTobcm_BPI_M64 	},
+  { "bpi-m2u",	   10501, BPI_MODEL_M2U, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2U, physToGpio_BPI_M2U, pinTobcm_BPI_M2U 	},
+  { "bpi-m2m",	   10601, BPI_MODEL_M2M, 1, 1, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2M, physToGpio_BPI_M2M, pinTobcm_BPI_M2M 	},
+  { "bpi-m2p_H2+", 10701, BPI_MODEL_M2P_H2P, 1, 2, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2P, physToGpio_BPI_M2P, pinTobcm_BPI_M2P 	},
+  { "bpi-m2p_H5",  10801, BPI_MODEL_M2P_H5, 1, 2, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2P, physToGpio_BPI_M2P, pinTobcm_BPI_M2P 	},
+  { "bpi-m2u_V40", 10901, BPI_MODEL_M2U_V40, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2U, physToGpio_BPI_M2U, pinTobcm_BPI_M2U 	},
+  { "bpi-m2z",	   11001, BPI_MODEL_M2Z, 1, 1, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2P, physToGpio_BPI_M2P, pinTobcm_BPI_M2P 	},
+  { "bpi-r2",      11101, BPI_MODEL_R2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2,  physToGpio_BPI_R2,  pinTobcm_BPI_R2    },
+  { NULL,		0, 0, 1, 2, BPI_MAKER_SINOVOIP, 0, NULL, NULL, NULL 	},
 } ;
 
 
@@ -560,7 +562,7 @@ int bpi_piGpioLayout (void)
         //gpioLayout = board->gpioLayout;
         gpioLayout = board->model; // BPI: use model to replace gpioLayout
         //printf("BPI: name[%s] gpioLayout(%d)\n",board->name, gpioLayout);
-        if(gpioLayout >= 21) {
+        if(gpioLayout >= BPI_MODEL_MIN) {
           bpi_found = 1;
           break;
         }
@@ -579,18 +581,22 @@ int bpi_get_rpi_info(rpi_info *info)
 {
   struct BPIBoards *board=bpiboard;
   static int  gpioLayout = -1 ;
-  char ram[64];
-  char manufacturer[64];
-  char processor[64];
-  char type[64];
+  static char ram[64];
+  static char manufacturer[64];
+  static char type[64];
 
   gpioLayout = bpi_piGpioLayout () ;
   printf("BPI: gpioLayout(%d)\n", gpioLayout);
   if(bpi_found == 1) {
-    board = &bpiboard[gpioLayout];
+    for (board = bpiboard ; board->name != NULL ; ++board) {
+      if (board->model == gpioLayout)
+        break;
+    }
+    if (board->name == NULL)
+      return -1;
     printf("BPI: name[%s] gpioLayout(%d)\n",board->name, gpioLayout);
     sprintf(ram, "%dMB", piMemorySize [board->mem]);
-    sprintf(type, "%s", piModelNames [board->model]);
+    sprintf(type, "%s", piModelNames [board->model] ? piModelNames [board->model] : "Unknown");
      //add by jackzeng
      //jude mtk platform
     if(strcmp(board->name, "bpi-r2") == 0){
