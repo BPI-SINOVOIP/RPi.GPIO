@@ -88,7 +88,8 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_W3         91
 #define BPI_MODEL_AIM7       92
 #define BPI_MODEL_M4SUPER    93
-#define BPI_MODELS_MAX       94
+#define BPI_MODEL_M1SUPER    94
+#define BPI_MODELS_MAX       95
 
 #define BPI_MAKER_SINOVOIP    6
 
@@ -214,6 +215,7 @@ static volatile uint32_t *gpio_map;
 #define ROCKCHIP_GPIO_PIN_BASE			0
 #define ROCKCHIP_GPIO_PIN_END			159
 #define ROCKCHIP_GPIO_MAP_SIZE_RK3568		0x100
+#define ROCKCHIP_GPIO_MAP_SIZE_RK3528		0x200
 #define ROCKCHIP_GPIO_MAP_SIZE_RK3576		0x200
 #define ROCKCHIP_GPIO_MAP_SIZE_RK3588		0x100
 
@@ -279,6 +281,13 @@ static const off_t rockchip_gpio_base_rk3568[ROCKCHIP_GPIO_BANKS] = {
   0xfe760000,
   0xfe770000,
 };
+static const off_t rockchip_gpio_base_rk3528[ROCKCHIP_GPIO_BANKS] = {
+  0xff610000,
+  0xffaf0000,
+  0xffb00000,
+  0xffb10000,
+  0xffb20000,
+};
 static const off_t rockchip_gpio_base_rk3576[ROCKCHIP_GPIO_BANKS] = {
   0x27320000,
   0x2ae10000,
@@ -339,6 +348,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_W3]      = "Banana Pi W3[RK3588]",
   [BPI_MODEL_AIM7]    = "Banana Pi AIM7[RK3588]",
   [BPI_MODEL_M4SUPER] = "Banana Pi M4 Super[RK3568]",
+  [BPI_MODEL_M1SUPER] = "Banana Pi M1 Super[RK3528]",
 } ;
 
 char *piRevisionNames [16] =
@@ -566,6 +576,15 @@ struct BPIBoards bpiboard [] =
   { "bananapi-m4super", 12601, BPI_MODEL_M4SUPER, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M4SUPER, physToGpio_BPI_M4SUPER, pinTobcm_BPI_M4SUPER 	},
   { "bananapi-m4-super", 12601, BPI_MODEL_M4SUPER, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M4SUPER, physToGpio_BPI_M4SUPER, pinTobcm_BPI_M4SUPER 	},
   { "armsom-sige3", 12601, BPI_MODEL_M4SUPER, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M4SUPER, physToGpio_BPI_M4SUPER, pinTobcm_BPI_M4SUPER 	},
+  { "bpi-m1super", 12701, BPI_MODEL_M1SUPER, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M1SUPER, physToGpio_BPI_M1SUPER, pinTobcm_BPI_M1SUPER 	},
+  { "bpi-m1-super", 12701, BPI_MODEL_M1SUPER, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M1SUPER, physToGpio_BPI_M1SUPER, pinTobcm_BPI_M1SUPER 	},
+  { "bpi-m1s", 12701, BPI_MODEL_M1SUPER, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M1SUPER, physToGpio_BPI_M1SUPER, pinTobcm_BPI_M1SUPER 	},
+  { "bananapim1super", 12701, BPI_MODEL_M1SUPER, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M1SUPER, physToGpio_BPI_M1SUPER, pinTobcm_BPI_M1SUPER 	},
+  { "banana-pi-m1-super", 12701, BPI_MODEL_M1SUPER, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M1SUPER, physToGpio_BPI_M1SUPER, pinTobcm_BPI_M1SUPER 	},
+  { "bananapi-m1super", 12701, BPI_MODEL_M1SUPER, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M1SUPER, physToGpio_BPI_M1SUPER, pinTobcm_BPI_M1SUPER 	},
+  { "bananapi-m1-super", 12701, BPI_MODEL_M1SUPER, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M1SUPER, physToGpio_BPI_M1SUPER, pinTobcm_BPI_M1SUPER 	},
+  { "bananapi-m1s", 12701, BPI_MODEL_M1SUPER, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M1SUPER, physToGpio_BPI_M1SUPER, pinTobcm_BPI_M1SUPER 	},
+  { "armsom-sige1", 12701, BPI_MODEL_M1SUPER, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M1SUPER, physToGpio_BPI_M1SUPER, pinTobcm_BPI_M1SUPER 	},
   { "bpi-r2",      11101, BPI_MODEL_R2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2,  physToGpio_BPI_R2,  pinTobcm_BPI_R2    },
   { NULL,		0, 0, 1, 2, BPI_MAKER_SINOVOIP, 0, NULL, NULL, NULL 	},
 } ;
@@ -586,6 +605,11 @@ static int bpi_model_is_rk3576(int model)
   return model == BPI_MODEL_M5PRO || model == BPI_MODEL_CM5PRO;
 }
 
+static int bpi_model_is_rk3528(int model)
+{
+  return model == BPI_MODEL_M1SUPER;
+}
+
 static int bpi_model_is_rk3588(int model)
 {
   return model == BPI_MODEL_M7 ||
@@ -597,12 +621,19 @@ static int bpi_model_is_rockchip(int model)
 {
   return model == BPI_MODEL_R2PRO ||
       model == BPI_MODEL_M4SUPER ||
+      bpi_model_is_rk3528(model) ||
       bpi_model_is_rk3576(model) ||
       bpi_model_is_rk3588(model);
 }
 
 static void bpi_select_rockchip_backend(int model)
 {
+  if (bpi_model_is_rk3528(model)) {
+    rockchip_gpio_base = rockchip_gpio_base_rk3528;
+    rockchip_gpio_map_size = ROCKCHIP_GPIO_MAP_SIZE_RK3528;
+    return;
+  }
+
   if (bpi_model_is_rk3576(model)) {
     rockchip_gpio_base = rockchip_gpio_base_rk3576;
     rockchip_gpio_map_size = ROCKCHIP_GPIO_MAP_SIZE_RK3576;
@@ -710,6 +741,22 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "armsom,sige3") ||
       strstr(hardware, "rk3568-armsom-sige3"))
     return bpi_find_board_by_name("bpi-m4-super");
+
+  if (strstr(hardware, "Banana Pi BPI-M1 Super") ||
+      strstr(hardware, "BananaPi BPI-M1 Super") ||
+      strstr(hardware, "Banana Pi M1 Super") ||
+      strstr(hardware, "BananaPi M1 Super") ||
+      strstr(hardware, "BPI-M1 Super") ||
+      strstr(hardware, "Banana Pi BPI-M1S") ||
+      strstr(hardware, "BananaPi BPI-M1S") ||
+      strstr(hardware, "Banana Pi M1S") ||
+      strstr(hardware, "BananaPi M1S") ||
+      strstr(hardware, "BPI-M1S") ||
+      strstr(hardware, "ArmSom Sige1") ||
+      strstr(hardware, "ArmSoM Sige1") ||
+      strstr(hardware, "armsom,sige1") ||
+      strstr(hardware, "rk3528-armsom-sige1"))
+    return bpi_find_board_by_name("bpi-m1-super");
 
   if (strstr(hardware, "Banana Pi BPI-M5") ||
       strstr(hardware, "BananaPi BPI-M5") ||
@@ -1999,6 +2046,8 @@ int bpi_get_rpi_info(rpi_info *info)
     }else if (bpi_found_rockchip == 1) {
 	if (bpi_model_is_rk3576(board->model))
 	    info->processor = "Rockchip RK3576";
+	else if (bpi_model_is_rk3528(board->model))
+	    info->processor = "Rockchip RK3528";
 	else if (bpi_model_is_rk3588(board->model))
 	    info->processor = "Rockchip RK3588";
 	else
