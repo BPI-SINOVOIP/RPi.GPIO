@@ -88,8 +88,8 @@ The supported IO surface is:
 | BPI-M2 | existing A31s map | done | Existing `BPI_MODEL_M2`. |
 | BPI-M2 Plus H3/H2+/H5 | existing M2 Plus map | done | Aliases already present. |
 | BPI-M2 Ultra / BPI-M2 Berry | existing R40/V40 map | done | Aliases already present. |
-| BPI-6204 / BPI-CS6204 | R40/M2 Ultra-compatible industrial BSP | alias | `bpi-6204` exists; add CS6204 naming if needed. |
-| BPI-6202 / BPI-CS6202 | CS6202/CS6204-compatible BSP direction | todo | Reuse 6204/M2 Ultra map only as an alias; do not create a new model id. |
+| BPI-6204 / BPI-CS6204 | R40/M2 Ultra-compatible industrial BSP | alias | Added `bpi-6204`, `bpi-cs6204`, and `bpi-cs-6204` aliases using the existing M2 Ultra/V40 map; local build check passed. |
+| BPI-6202 / BPI-CS6202 | CS6202/CS6204-compatible BSP direction | alias | Added `bpi-6202`, `bpi-cs6202`, and `bpi-cs-6202` aliases using the existing M2 Ultra/V40 map; no new model id; local build check passed. |
 | BPI-M2 Magic / v1.1 | existing R16 maps | done | Separate v1.1 map exists. |
 | BPI-M2 Zero / BPI-P2 Zero | existing H2+/H3 map | done | Aliases already present. |
 | BPI-M3 | existing A83T map | done | Existing `BPI_MODEL_M3`. |
@@ -138,6 +138,5 @@ The supported IO surface is:
 
 Start with Batch A:
 
-1. Add BPI-CS6202/BPI-CS6204 aliases to the existing R40/M2 Ultra-compatible
-   mapping.
-2. Mirror the CS6202/CS6204 change in `BPI-WiringPi2`.
+Move to Batch B after committing and pushing the CS6202/CS6204 alias set in both
+repositories.
