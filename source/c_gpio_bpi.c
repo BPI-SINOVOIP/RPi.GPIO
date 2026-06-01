@@ -98,7 +98,8 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_F2P        101
 #define BPI_MODEL_CM6        102
 #define BPI_MODEL_R4         103
-#define BPI_MODELS_MAX       104
+#define BPI_MODEL_R3         104
+#define BPI_MODELS_MAX       105
 
 #define BPI_MAKER_SINOVOIP    6
 
@@ -513,6 +514,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_F2P]     = "Banana Pi F2P[Sunplus SP7021]",
   [BPI_MODEL_CM6]     = "Banana Pi CM6[SpacemiT K1]",
   [BPI_MODEL_R4]      = "Banana Pi R4[MT7988]",
+  [BPI_MODEL_R3]      = "Banana Pi R3[MT7986]",
 } ;
 
 char *piRevisionNames [16] =
@@ -790,6 +792,10 @@ struct BPIBoards bpiboard [] =
   { "bananapir4",  13601, BPI_MODEL_R4, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4, physToGpio_BPI_R4, pinTobcm_BPI_R4 	},
   { "bananapi-r4", 13601, BPI_MODEL_R4, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4, physToGpio_BPI_R4, pinTobcm_BPI_R4 	},
   { "banana-pi-r4", 13601, BPI_MODEL_R4, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4, physToGpio_BPI_R4, pinTobcm_BPI_R4 	},
+  { "bpi-r3",      13701, BPI_MODEL_R3, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R3, physToGpio_BPI_R3, pinTobcm_BPI_R3 	},
+  { "bananapir3",  13701, BPI_MODEL_R3, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R3, physToGpio_BPI_R3, pinTobcm_BPI_R3 	},
+  { "bananapi-r3", 13701, BPI_MODEL_R3, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R3, physToGpio_BPI_R3, pinTobcm_BPI_R3 	},
+  { "banana-pi-r3", 13701, BPI_MODEL_R3, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R3, physToGpio_BPI_R3, pinTobcm_BPI_R3 	},
   { "bpi-r2",      11101, BPI_MODEL_R2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2,  physToGpio_BPI_R2,  pinTobcm_BPI_R2    },
   { NULL,		0, 0, 1, 2, BPI_MAKER_SINOVOIP, 0, NULL, NULL, NULL 	},
 } ;
@@ -1158,6 +1164,23 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "BPI-R4") ||
       strstr(hardware, "mt7988a-bananapi-bpi-r4"))
     return bpi_find_board_by_name("bpi-r4");
+
+  if (strstr(hardware, "BananaPi BPI-R3 Mini") ||
+      strstr(hardware, "Banana Pi BPI-R3 Mini") ||
+      strstr(hardware, "BananaPi R3 Mini") ||
+      strstr(hardware, "Banana Pi R3 Mini") ||
+      strstr(hardware, "BPI-R3 Mini") ||
+      strstr(hardware, "mt7986a-bananapi-bpi-r3-mini"))
+    return NULL;
+
+  if (strstr(hardware, "Bananapi BPI-R3") ||
+      strstr(hardware, "BananaPi BPI-R3") ||
+      strstr(hardware, "Banana Pi BPI-R3") ||
+      strstr(hardware, "BananaPi R3") ||
+      strstr(hardware, "Banana Pi R3") ||
+      strstr(hardware, "BPI-R3") ||
+      strstr(hardware, "mt7986a-bananapi-bpi-r3"))
+    return bpi_find_board_by_name("bpi-r3");
 
   if (strstr(hardware, "Bananapi-R2 Pro") ||
       strstr(hardware, "BananaPi BPI-R2 Pro") ||
@@ -3080,7 +3103,8 @@ int bpi_get_rpi_info(rpi_info *info)
         bpi_found_mtk = 1;
 	printf("found mtk board\n");
     }
-    bpi_found_mtk_v2 = (board->model == BPI_MODEL_R4);
+    bpi_found_mtk_v2 = (board->model == BPI_MODEL_R4 ||
+                         board->model == BPI_MODEL_R3);
     bpi_found_sun50iw9 = (board->model == BPI_MODEL_M4BERRY || board->model == BPI_MODEL_M4ZERO);
     bpi_found_meson = (board->model == BPI_MODEL_M2S ||
                        board->model == BPI_MODEL_CM4IO ||
@@ -3105,7 +3129,10 @@ int bpi_get_rpi_info(rpi_info *info)
     if(bpi_found_mtk == 1){
         info->processor = "MTK";
     }else if (bpi_found_mtk_v2 == 1) {
-        info->processor = "MT7988";
+        if (board->model == BPI_MODEL_R3)
+            info->processor = "MT7986";
+        else
+            info->processor = "MT7988";
     }else if (bpi_found_meson == 1) {
 	info->processor = "Amlogic Meson";
     }else if (bpi_found_spacemit == 1) {

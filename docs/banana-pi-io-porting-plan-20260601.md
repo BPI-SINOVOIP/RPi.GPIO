@@ -142,7 +142,8 @@ The supported IO surface is:
 | Board group | Status | Notes |
 | --- | --- | --- |
 | BPI-R4 | done | Added MT7988 GPIO v2 mmap backend from Armbian/kernel pinctrl registers (`pio@1001f000`) and the official CON2 26-pin GPIO map. Basic setup/input/output/read/write extension build-tested. Pull control remains no-op pending hardware validation. |
-| BPI-R3 / R3 Mini | todo | MT7986 shares the GPIO v2 offsets with R4, but the exact 26/40-pin public header map still needs authoritative extraction from official docs or schematic before coding. |
+| BPI-R3 | done | Added MT7986 GPIO support by reusing the MTK GPIO v2 mmap backend (`pio@1001f000`) and the official R3 26-pin GPIO image (`r3_gpio_40.jpg`). Basic setup/input/output/read/write extension build-tested. Pull control remains no-op pending hardware validation. |
+| BPI-R3 Mini | blocked | Official docs only show generic sysfs GPIO examples and board interfaces; no authoritative 26/40-pin expansion header map was found. Do not alias it to R3 without a confirmed carrier/header map. |
 | BPI-R64 | todo | MT7622 needs a separate SoC profile and authoritative header map; DTS currently identifies board buses, LEDs, and keys, not a complete RPi.GPIO header map. |
 | BPI-R4 Lite | todo | MT7987/MikroBUS 2x8 needs a separate policy/map; it is not a Raspberry Pi 26/40-pin header. |
 | BPI-R4 Pro | todo | MT7988 backend should be reusable, but the Pro-specific header/export map must be confirmed before adding aliases. |
@@ -152,7 +153,7 @@ The supported IO surface is:
 
 ## Current Next Item
 
-Continue Batch E router/service-header review from `BPI-R3 / R3 Mini`.
+Continue Batch E router/service-header review from `BPI-R64`.
 
 Resume sequence:
 
