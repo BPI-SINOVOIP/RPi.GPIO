@@ -139,13 +139,13 @@ The supported IO surface is:
 
 ## Current Next Item
 
-Continue Batch B from `BPI-F3`.
+Continue Batch B from `BPI-AI2N`.
 
 Resume sequence:
 
-1. Confirm the `BPI-F3` K1 GPIO numbering, register backend, and 40-pin map
-   against Armbian and Dangku/vendor references.
-2. Add `BPI-F3` in `BPI-WiringPi2`, build-test, commit, and push.
-3. Add `BPI-F3` in this repo, build-test, commit, and push.
-4. If the K1 mmap backend is not reliable from available sources, mark
-   `BPI-F3` blocked with the missing register/map item instead of guessing.
+1. Confirm the `BPI-AI2N` RZ/V2N GPIO numbering, register backend, and 40-pin
+   map against Armbian and vendor references.
+2. Add `BPI-AI2N` in `BPI-WiringPi2`, build-test, commit, and push.
+3. Add `BPI-AI2N` in this repo, build-test, commit, and push.
+4. If the RZ/V2N mmap backend is not reliable from available sources, mark
+   `BPI-AI2N` blocked with the missing register/map item instead of guessing.
