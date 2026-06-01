@@ -100,7 +100,8 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_R4         103
 #define BPI_MODEL_R3         104
 #define BPI_MODEL_R64        105
-#define BPI_MODELS_MAX       106
+#define BPI_MODEL_R4LITE     106
+#define BPI_MODELS_MAX       107
 
 #define BPI_MAKER_SINOVOIP    6
 
@@ -589,6 +590,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_R4]      = "Banana Pi R4[MT7988]",
   [BPI_MODEL_R3]      = "Banana Pi R3[MT7986]",
   [BPI_MODEL_R64]     = "Banana Pi R64[MT7622]",
+  [BPI_MODEL_R4LITE]  = "Banana Pi R4 Lite[MT7987]",
 } ;
 
 char *piRevisionNames [16] =
@@ -874,6 +876,12 @@ struct BPIBoards bpiboard [] =
   { "bananapir64", 13801, BPI_MODEL_R64, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R64, physToGpio_BPI_R64, pinTobcm_BPI_R64 	},
   { "bananapi-r64", 13801, BPI_MODEL_R64, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R64, physToGpio_BPI_R64, pinTobcm_BPI_R64 	},
   { "banana-pi-r64", 13801, BPI_MODEL_R64, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R64, physToGpio_BPI_R64, pinTobcm_BPI_R64 	},
+  { "bpi-r4lite",  13901, BPI_MODEL_R4LITE, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4LITE, physToGpio_BPI_R4LITE, pinTobcm_BPI_R4LITE 	},
+  { "bpi-r4-lite", 13901, BPI_MODEL_R4LITE, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4LITE, physToGpio_BPI_R4LITE, pinTobcm_BPI_R4LITE 	},
+  { "bananapir4lite", 13901, BPI_MODEL_R4LITE, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4LITE, physToGpio_BPI_R4LITE, pinTobcm_BPI_R4LITE 	},
+  { "bananapi-r4lite", 13901, BPI_MODEL_R4LITE, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4LITE, physToGpio_BPI_R4LITE, pinTobcm_BPI_R4LITE 	},
+  { "bananapi-r4-lite", 13901, BPI_MODEL_R4LITE, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4LITE, physToGpio_BPI_R4LITE, pinTobcm_BPI_R4LITE 	},
+  { "banana-pi-r4-lite", 13901, BPI_MODEL_R4LITE, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4LITE, physToGpio_BPI_R4LITE, pinTobcm_BPI_R4LITE 	},
   { "bpi-r2",      11101, BPI_MODEL_R2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2,  physToGpio_BPI_R2,  pinTobcm_BPI_R2    },
   { NULL,		0, 0, 1, 2, BPI_MAKER_SINOVOIP, 0, NULL, NULL, NULL 	},
 } ;
@@ -1233,6 +1241,20 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "Banana Pi AI2N") ||
       strstr(hardware, "BPI-AI2N"))
     return bpi_find_board_by_name("bpi-ai2n");
+
+  if (strstr(hardware, "Bananapi BPI-R4-LITE") ||
+      strstr(hardware, "Bananapi BPI-R4 Lite") ||
+      strstr(hardware, "BananaPi BPI-R4-LITE") ||
+      strstr(hardware, "BananaPi BPI-R4 Lite") ||
+      strstr(hardware, "Banana Pi BPI-R4 Lite") ||
+      strstr(hardware, "BananaPi R4 Lite") ||
+      strstr(hardware, "Banana Pi R4 Lite") ||
+      strstr(hardware, "BPI-R4-LITE") ||
+      strstr(hardware, "BPI-R4 Lite") ||
+      strstr(hardware, "BPI-R4_Lite") ||
+      strstr(hardware, "bananapi,bpi-r4-lite") ||
+      strstr(hardware, "mt7987a-bananapi-bpi-r4-lite"))
+    return bpi_find_board_by_name("bpi-r4-lite");
 
   if (strstr(hardware, "Bananapi BPI-R4") ||
       strstr(hardware, "BananaPi BPI-R4") ||
@@ -3406,7 +3428,8 @@ int bpi_get_rpi_info(rpi_info *info)
 	printf("found mtk board\n");
     }
     bpi_found_mtk_v2 = (board->model == BPI_MODEL_R4 ||
-                         board->model == BPI_MODEL_R3);
+                         board->model == BPI_MODEL_R3 ||
+                         board->model == BPI_MODEL_R4LITE);
     bpi_found_mtk_mt7622 = (board->model == BPI_MODEL_R64);
     bpi_found_sun50iw9 = (board->model == BPI_MODEL_M4BERRY || board->model == BPI_MODEL_M4ZERO);
     bpi_found_meson = (board->model == BPI_MODEL_M2S ||
@@ -3434,6 +3457,8 @@ int bpi_get_rpi_info(rpi_info *info)
     }else if (bpi_found_mtk_v2 == 1) {
         if (board->model == BPI_MODEL_R3)
             info->processor = "MT7986";
+        else if (board->model == BPI_MODEL_R4LITE)
+            info->processor = "MT7987";
         else
             info->processor = "MT7988";
     }else if (bpi_found_mtk_mt7622 == 1) {
