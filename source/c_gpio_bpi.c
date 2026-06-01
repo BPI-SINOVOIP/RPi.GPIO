@@ -273,6 +273,7 @@ struct BPIBoards bpiboard [] =
   { "bpi-rpi3",	      -1, 20, 1, 2, 5, 0, NULL, NULL, NULL 	},
   { "bpi-m1",	   10001, BPI_MODEL_M1, 1, 2, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M1P, physToGpio_BPI_M1P, pinTobcm_BPI_M1P 	},
   { "bpi-m1p",	   10001, BPI_MODEL_M1P, 1, 2, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M1P, physToGpio_BPI_M1P, pinTobcm_BPI_M1P 	},
+  { "bpi-m1-plus", 10001, BPI_MODEL_M1P, 1, 2, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M1P, physToGpio_BPI_M1P, pinTobcm_BPI_M1P 	},
   { "bpi-r1",	   10001, BPI_MODEL_R1, 1, 2, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M1P, physToGpio_BPI_M1P, pinTobcm_BPI_M1P 	},
   { "bpi-m2",	   10101, BPI_MODEL_M2, 1, 2, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2, physToGpio_BPI_M2, pinTobcm_BPI_M2 	},
   { "bpi-m3",	   10201, BPI_MODEL_M3, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M3, physToGpio_BPI_M3, pinTobcm_BPI_M3 	},
