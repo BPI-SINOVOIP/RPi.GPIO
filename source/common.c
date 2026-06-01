@@ -31,6 +31,9 @@ const int pin_to_gpio_rev3[41] = {-1, -1, -1, 2, -1, 3, -1, 4, 14, -1, 15, 17, 1
 #ifdef BPI
 const int pin_to_gpio_rev4[41] = {-1, -1, -1, 2, -1, 3, -1, 4, 14, -1, 15, 17, 18, 27, -1, 22, 23, -1, 24, 10, -1, 9, 25, 11, 8, -1, 7, 0, 1, 5, -1, 6, 12, 13, -1, 19, 16, 26, 20, -1, 21 };
 #endif
+const int (*pin_to_gpio)[41];
+int gpio_direction[54];
+rpi_info rpiinfo;
 int setup_error = 0;
 int module_setup = 0;
 
