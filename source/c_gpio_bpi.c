@@ -72,7 +72,8 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_M2U_V40    75
 #define BPI_MODEL_M2Z        76
 #define BPI_MODEL_R2         77
-#define BPI_MODELS_MAX       80
+#define BPI_MODEL_M2M_V11    78
+#define BPI_MODELS_MAX       81
 
 #define BPI_MAKER_SINOVOIP    6
 
@@ -169,6 +170,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_M2U_V40] = "Banana Pi M2 Ultra[V40]",
   [BPI_MODEL_M2Z]     = "Banana Pi M2 Zero[H2+/H3]",
   [BPI_MODEL_R2]      = "Banana Pi R2[MT7623]",
+  [BPI_MODEL_M2M_V11] = "Banana Pi M2 Magic v1.1[R16]",
 } ;
 
 char *piRevisionNames [16] =
@@ -278,6 +280,8 @@ struct BPIBoards bpiboard [] =
   { "bpi-m64",	   10401, BPI_MODEL_M64, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M64, physToGpio_BPI_M64, pinTobcm_BPI_M64 	},
   { "bpi-m2u",	   10501, BPI_MODEL_M2U, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2U, physToGpio_BPI_M2U, pinTobcm_BPI_M2U 	},
   { "bpi-m2m",	   10601, BPI_MODEL_M2M, 1, 1, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2M, physToGpio_BPI_M2M, pinTobcm_BPI_M2M 	},
+  { "bpi-m2m-v1.1", 10601, BPI_MODEL_M2M_V11, 1, 1, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2M_V11, physToGpio_BPI_M2M_V11, pinTobcm_BPI_M2M_V11 	},
+  { "bpi-m2m-v11", 10601, BPI_MODEL_M2M_V11, 1, 1, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2M_V11, physToGpio_BPI_M2M_V11, pinTobcm_BPI_M2M_V11 	},
   { "bpi-m2p_H2+", 10701, BPI_MODEL_M2P_H2P, 1, 2, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2P, physToGpio_BPI_M2P, pinTobcm_BPI_M2P 	},
   { "bpi-m2p_H5",  10801, BPI_MODEL_M2P_H5, 1, 2, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2P, physToGpio_BPI_M2P, pinTobcm_BPI_M2P 	},
   { "bpi-m2u_V40", 10901, BPI_MODEL_M2U_V40, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2U, physToGpio_BPI_M2U, pinTobcm_BPI_M2U 	},
