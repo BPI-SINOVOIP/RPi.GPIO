@@ -77,6 +77,7 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_M4ZERO     80
 #define BPI_MODEL_M2S        81
 #define BPI_MODEL_CM4IO      82
+#define BPI_MODEL_M5         83
 #define BPI_MODELS_MAX       84
 
 #define BPI_MAKER_SINOVOIP    6
@@ -227,6 +228,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_M4ZERO]  = "Banana Pi M4 Zero[H618]",
   [BPI_MODEL_M2S]     = "Banana Pi M2S[Amlogic G12B]",
   [BPI_MODEL_CM4IO]   = "Banana Pi CM4IO[Amlogic G12B]",
+  [BPI_MODEL_M5]      = "Banana Pi M5[Amlogic SM1]",
 } ;
 
 char *piRevisionNames [16] =
@@ -390,6 +392,10 @@ struct BPIBoards bpiboard [] =
   { "banana-pi-cm4io", 11501, BPI_MODEL_CM4IO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_CM4IO, physToGpio_BPI_CM4IO, pinTobcm_BPI_CM4IO 	},
   { "bpi-cm4",     11501, BPI_MODEL_CM4IO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_CM4IO, physToGpio_BPI_CM4IO, pinTobcm_BPI_CM4IO 	},
   { "bananapicm4", 11501, BPI_MODEL_CM4IO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_CM4IO, physToGpio_BPI_CM4IO, pinTobcm_BPI_CM4IO 	},
+  { "bpi-m5",      11601, BPI_MODEL_M5, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M5, physToGpio_BPI_M5, pinTobcm_BPI_M5 	},
+  { "bananapim5",  11601, BPI_MODEL_M5, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M5, physToGpio_BPI_M5, pinTobcm_BPI_M5 	},
+  { "banana-pi-m5", 11601, BPI_MODEL_M5, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M5, physToGpio_BPI_M5, pinTobcm_BPI_M5 	},
+  { "bananapi-m5", 11601, BPI_MODEL_M5, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M5, physToGpio_BPI_M5, pinTobcm_BPI_M5 	},
   { "bpi-r2",      11101, BPI_MODEL_R2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2,  physToGpio_BPI_R2,  pinTobcm_BPI_R2    },
   { NULL,		0, 0, 1, 2, BPI_MAKER_SINOVOIP, 0, NULL, NULL, NULL 	},
 } ;
@@ -433,6 +439,13 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "BPI-CM4IO") ||
       strstr(hardware, "BPI-CM4"))
     return bpi_find_board_by_name("bpi-cm4io");
+
+  if (strstr(hardware, "Banana Pi BPI-M5") ||
+      strstr(hardware, "BananaPi BPI-M5") ||
+      strstr(hardware, "Banana Pi M5") ||
+      strstr(hardware, "BananaPi M5") ||
+      strstr(hardware, "BPI-M5"))
+    return bpi_find_board_by_name("bpi-m5");
 
   return NULL;
 }
@@ -1122,7 +1135,9 @@ int bpi_get_rpi_info(rpi_info *info)
 	printf("found mtk board\n");
     }
     bpi_found_sun50iw9 = (board->model == BPI_MODEL_M4BERRY || board->model == BPI_MODEL_M4ZERO);
-    bpi_found_meson = (board->model == BPI_MODEL_M2S || board->model == BPI_MODEL_CM4IO);
+    bpi_found_meson = (board->model == BPI_MODEL_M2S ||
+                       board->model == BPI_MODEL_CM4IO ||
+                       board->model == BPI_MODEL_M5);
     sprintf(manufacturer, "%s", piMakerNames [board->maker]);
     info->p1_revision = 3;
     info->type = type;
