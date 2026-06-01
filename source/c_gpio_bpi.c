@@ -73,7 +73,8 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_M2Z        76
 #define BPI_MODEL_R2         77
 #define BPI_MODEL_M2M_V11    78
-#define BPI_MODELS_MAX       81
+#define BPI_MODEL_M4BERRY    79
+#define BPI_MODELS_MAX       82
 
 #define BPI_MAKER_SINOVOIP    6
 
@@ -81,6 +82,7 @@ static volatile uint32_t *gpio_map;
 #define SUNXI_R_GPIO_REG_OFFSET   0xC00
 #define SUNXI_GPIO_BASE		0x01C20000
 #define SUNXI_GPIO_REG_OFFSET   0x800
+#define SUN50IW9_GPIO_BASE	0x0300B000
 #define SUNXI_CFG_OFFSET	0x00
 #define SUNXI_DATA_OFFSET	0x10
 #define SUNXI_PUD_OFFSET	0x1C
@@ -135,6 +137,7 @@ static volatile uint32_t *r_pio_map;
 
 int bpi_found=-1;
 int bpi_found_mtk = 0;
+int bpi_found_sun50iw9 = 0;
 
 const int *pinToGpio_BP ;
 const int *physToGpio_BP ;
@@ -171,6 +174,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_M2Z]     = "Banana Pi M2 Zero[H2+/H3]",
   [BPI_MODEL_R2]      = "Banana Pi R2[MT7623]",
   [BPI_MODEL_M2M_V11] = "Banana Pi M2 Magic v1.1[R16]",
+  [BPI_MODEL_M4BERRY] = "Banana Pi M4 Berry[H618]",
 } ;
 
 char *piRevisionNames [16] =
@@ -318,9 +322,47 @@ struct BPIBoards bpiboard [] =
   { "bpi-m2-zero", 11001, BPI_MODEL_M2Z, 1, 1, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2P, physToGpio_BPI_M2P, pinTobcm_BPI_M2P 	},
   { "bpi-p2z",	   11001, BPI_MODEL_M2Z, 1, 1, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2P, physToGpio_BPI_M2P, pinTobcm_BPI_M2P 	},
   { "bpi-p2-zero", 11001, BPI_MODEL_M2Z, 1, 1, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2P, physToGpio_BPI_M2P, pinTobcm_BPI_M2P 	},
+  { "bpi-m4berry", 11201, BPI_MODEL_M4BERRY, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M4BERRY, physToGpio_BPI_M4BERRY, pinTobcm_BPI_M4BERRY 	},
+  { "bpi-m4-berry", 11201, BPI_MODEL_M4BERRY, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M4BERRY, physToGpio_BPI_M4BERRY, pinTobcm_BPI_M4BERRY 	},
+  { "bananapim4berry", 11201, BPI_MODEL_M4BERRY, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M4BERRY, physToGpio_BPI_M4BERRY, pinTobcm_BPI_M4BERRY 	},
   { "bpi-r2",      11101, BPI_MODEL_R2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2,  physToGpio_BPI_R2,  pinTobcm_BPI_R2    },
   { NULL,		0, 0, 1, 2, BPI_MAKER_SINOVOIP, 0, NULL, NULL, NULL 	},
 } ;
+
+static struct BPIBoards *bpi_find_board_by_name(const char *hardware)
+{
+  struct BPIBoards *board;
+
+  for (board = bpiboard ; board->name != NULL ; ++board)
+    if (strcmp(board->name, hardware) == 0)
+      return board;
+
+  return NULL;
+}
+
+static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
+{
+  if (strstr(hardware, "BananaPi M4 Berry") ||
+      strstr(hardware, "Banana Pi BPI-M4 Berry") ||
+      strstr(hardware, "BPI-M4Berry"))
+    return bpi_find_board_by_name("bpi-m4berry");
+
+  return NULL;
+}
+
+static int bpi_set_layout_from_board(struct BPIBoards *board, int *gpioLayout)
+{
+  if (board == NULL)
+    return 0;
+
+  *gpioLayout = board->model;
+  if (*gpioLayout >= BPI_MODEL_MIN) {
+    bpi_found = 1;
+    return 1;
+  }
+
+  return 0;
+}
 
 
 
@@ -521,12 +563,18 @@ int sunxi_setup(void)
     if ((uint32_t)gpio_mem % PAGE_SIZE)
         gpio_mem += PAGE_SIZE - ((uint32_t)gpio_mem % PAGE_SIZE);
 
-    gpio_map = (uint32_t *)mmap( (caddr_t)gpio_mem, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_FIXED, mem_fd, SUNXI_GPIO_BASE);
-    pio_map = gpio_map + (SUNXI_GPIO_REG_OFFSET>>2);
+    gpio_map = (uint32_t *)mmap((caddr_t)gpio_mem, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_FIXED, mem_fd,
+                                bpi_found_sun50iw9 ? SUN50IW9_GPIO_BASE : SUNXI_GPIO_BASE);
+    pio_map = bpi_found_sun50iw9 ? gpio_map : gpio_map + (SUNXI_GPIO_REG_OFFSET>>2);
 //printf("gpio_mem[%x] gpio_map[%x] pio_map[%x]\n", gpio_mem, gpio_map, pio_map);
 //R_PIO GPIO LMN
-    r_gpio_map = (uint32_t *)mmap( (caddr_t)0, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, mem_fd, SUNXI_R_GPIO_BASE);
-    r_pio_map = r_gpio_map + (SUNXI_R_GPIO_REG_OFFSET>>2);
+    if (!bpi_found_sun50iw9) {
+        r_gpio_map = (uint32_t *)mmap( (caddr_t)0, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, mem_fd, SUNXI_R_GPIO_BASE);
+        r_pio_map = r_gpio_map + (SUNXI_R_GPIO_REG_OFFSET>>2);
+    } else {
+        r_gpio_map = NULL;
+        r_pio_map = NULL;
+    }
 //printf("r_gpio_map[%x] r_pio_map[%x]\n", r_gpio_map, r_pio_map);
 
     if ((uint32_t)gpio_map < 0)
@@ -545,7 +593,7 @@ void sunxi_set_pullupdn(int gpio, int pud)
 
     sunxi_gpio_t *pio = &((sunxi_gpio_reg_t *) pio_map)->gpio_bank[bank];
 /* DK, for PL and PM */
-    if(bank >= 11) {
+    if(!bpi_found_sun50iw9 && bank >= 11) {
       bank -= 11;
       pio = &((sunxi_gpio_reg_t *) r_pio_map)->gpio_bank[bank];
     }
@@ -565,7 +613,7 @@ void sunxi_setup_gpio(int gpio, int direction, int pud)
     printf("sunxi_setup_gpio\n");
     sunxi_gpio_t *pio = &((sunxi_gpio_reg_t *) pio_map)->gpio_bank[bank];
 /* DK, for PL and PM */
-    if(bank >= 11) {
+    if(!bpi_found_sun50iw9 && bank >= 11) {
       bank -= 11;
       pio = &((sunxi_gpio_reg_t *) r_pio_map)->gpio_bank[bank];
     }
@@ -594,7 +642,7 @@ int sunxi_gpio_function(int gpio)
      printf("sunxi_gpio_function\n");
     sunxi_gpio_t *pio = &((sunxi_gpio_reg_t *) pio_map)->gpio_bank[bank];
 /* DK, for PL and PM */
-    if(bank >= 11) {
+    if(!bpi_found_sun50iw9 && bank >= 11) {
       bank -= 11;
       pio = &((sunxi_gpio_reg_t *) r_pio_map)->gpio_bank[bank];
     }
@@ -613,7 +661,7 @@ void sunxi_output_gpio(int gpio, int value)
  printf("gpio(%d) bank(%d) num(%d)\n", gpio, bank, num);
     sunxi_gpio_t *pio = &((sunxi_gpio_reg_t *) pio_map)->gpio_bank[bank];
 /* DK, for PL and PM */
-    if(bank >= 11) {
+    if(!bpi_found_sun50iw9 && bank >= 11) {
       bank -= 11;
       pio = &((sunxi_gpio_reg_t *) r_pio_map)->gpio_bank[bank];
     }
@@ -633,7 +681,7 @@ int sunxi_input_gpio(int gpio)
  printf("gpio(%d) bank(%d) num(%d)\n", gpio, bank, num);
     sunxi_gpio_t *pio = &((sunxi_gpio_reg_t *) pio_map)->gpio_bank[bank];
 /* DK, for PL and PM */
-    if(bank >= 11) {
+    if(!bpi_found_sun50iw9 && bank >= 11) {
       bank -= 11;
       pio = &((sunxi_gpio_reg_t *) r_pio_map)->gpio_bank[bank];
     }
@@ -677,31 +725,28 @@ int bpi_piGpioLayout (void)
     return gpioLayout ;
 
   bpi_found = 0; // -1: not init, 0: init but not found, 1: found
-  if ((bpiFd = fopen("/var/lib/bananapi/board.sh", "r")) == NULL) {
-    return -1;
-  }
-  while(!feof(bpiFd)) {
-    fgets(buffer, sizeof(buffer), bpiFd);
-    sscanf(buffer, "BOARD=%s", hardware);
-    //printf("BPI: buffer[%s] hardware[%s]\n",buffer, hardware);
-// Search for board:
-    for (board = bpiboard ; board->name != NULL ; ++board) {
-      //printf("BPI: name[%s] hardware[%s]\n",board->name, hardware);
-      if (strcmp (board->name, hardware) == 0) {
-        //gpioLayout = board->gpioLayout;
-        gpioLayout = board->model; // BPI: use model to replace gpioLayout
-        //printf("BPI: name[%s] gpioLayout(%d)\n",board->name, gpioLayout);
-        if(gpioLayout >= BPI_MODEL_MIN) {
-          bpi_found = 1;
-          break;
-        }
-      }
+  bpi_found_mtk = 0;
+  bpi_found_sun50iw9 = 0;
+  if ((bpiFd = fopen("/var/lib/bananapi/board.sh", "r")) != NULL) {
+    while(fgets(buffer, sizeof(buffer), bpiFd) != NULL) {
+      if (sscanf(buffer, "BOARD=%1023s", hardware) != 1)
+        continue;
+
+      board = bpi_find_board_by_name(hardware);
+      if (bpi_set_layout_from_board(board, &gpioLayout))
+        break;
     }
-    if(bpi_found == 1) {
-      break;
-    }
+    fclose(bpiFd);
   }
-  fclose(bpiFd);
+
+  if (bpi_found != 1 && (bpiFd = fopen("/proc/device-tree/model", "r")) != NULL) {
+    if (fgets(hardware, sizeof(hardware), bpiFd) != NULL) {
+      board = bpi_find_board_by_model_string(hardware);
+      bpi_set_layout_from_board(board, &gpioLayout);
+    }
+    fclose(bpiFd);
+  }
+
   //printf("BPI: name[%s] gpioLayout(%d)\n",board->name, gpioLayout);
   return gpioLayout ;
 }
@@ -732,6 +777,7 @@ int bpi_get_rpi_info(rpi_info *info)
         bpi_found_mtk = 1;
 	printf("found mtk board\n");
     }
+    bpi_found_sun50iw9 = (board->model == BPI_MODEL_M4BERRY);
     sprintf(manufacturer, "%s", piMakerNames [board->maker]);
     info->p1_revision = 3;
     info->type = type;
@@ -739,6 +785,8 @@ int bpi_get_rpi_info(rpi_info *info)
     info->manufacturer = manufacturer;
     if(bpi_found_mtk == 1){
         info->processor = "MTK";
+    }else if (bpi_found_sun50iw9 == 1) {
+	info->processor = "AW SUN50IW9";
     }else{
 	info->processor = "Allwinner";
     }
