@@ -133,7 +133,8 @@ The supported IO surface is:
 | BPI-M4 plain | Realtek RTD1395 | done | Extended the Realtek backend for RTD1395 single ISO GPIO group (`0x98007100`, GPIO 0-56) and added the official BPI-M4 40-pin table. Pull control remains no-op pending Realtek pinctrl validation. |
 | BPI-M6 | Synaptics VS680 | done | Added VS680 DW APB GPIO mmap backend from Armbian/vendor DTS (`gpio0/1/2` and `sm_gpio0`) and the official BPI-M6 CON3 40-pin table. SoC GPIO and SM_GPIO header pins are supported; header pins routed through the FXL6408 I2C expander remain non-GPIO in this mmap backend pending a separate gpiod/sysfs expander path. Local extension build passed. |
 | BPI-F2S / BPI-F2P | Sunplus SP7021 | done | Added SP7021 GPIO mmap backend from Armbian/vendor pinctrl registers (`pctl@0x9C000100`, base0/base1/base2 register banks) and the F2S/F2P 40-pin map from the official schematics. Pull control remains no-op pending Sunplus pinctrl hardware validation. Local extension build passed. |
-| BPI-CM6 / BPI-SM10 | SpacemiT K1/K3 | todo | Reuse K1/K3 work after F3/SM10 source validation. |
+| BPI-CM6 | SpacemiT K1 | done | Added CM6-specific 26-pin IO board map from the official CM6 docs; reuses the K1 SpacemiT mmap backend from F3. Physical pin 12 is GPIO44, so CM6 is not aliased to F3. Local extension build passed. |
+| BPI-SM10 | SpacemiT K3 | blocked | Official docs and local K3 DTS identify the board as `spacemit/k3_com260.dtb`, but no authoritative 40-pin expansion header map or schematic has been found in docs or SDK yet. Do not guess. |
 | BPI-M2C | UniSoC UIS7885 | blocked | Armbian path is PAC/hybrid; userspace GPIO support depends on usable kernel GPIO exposure. |
 
 ### Batch E: routers, app products, and blocked families
@@ -147,13 +148,11 @@ The supported IO surface is:
 
 ## Current Next Item
 
-Continue Batch D from `BPI-CM6 / BPI-SM10`.
+Continue Batch E router/service-header review.
 
 Resume sequence:
 
-1. Confirm SpacemiT K1/K3 GPIO numbering and BPI-CM6/SM10 carrier header map.
-2. Add one board or exact carrier alias set at a time in `BPI-WiringPi2`,
+1. Add one board or exact carrier alias set at a time in both repos,
    build-test, commit, and push.
-3. Add the same board in this repo, build-test, commit, and push.
-4. If a carrier map is not reliable from available sources,
+2. If a carrier map is not reliable from available sources,
    mark the row blocked with the exact missing item instead of guessing.

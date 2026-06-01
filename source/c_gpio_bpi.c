@@ -96,7 +96,8 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_M6         99
 #define BPI_MODEL_F2S        100
 #define BPI_MODEL_F2P        101
-#define BPI_MODELS_MAX       102
+#define BPI_MODEL_CM6        102
+#define BPI_MODELS_MAX       103
 
 #define BPI_MAKER_SINOVOIP    6
 
@@ -497,6 +498,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_M6]      = "Banana Pi M6[Synaptics VS680]",
   [BPI_MODEL_F2S]     = "Banana Pi F2S[Sunplus SP7021]",
   [BPI_MODEL_F2P]     = "Banana Pi F2P[Sunplus SP7021]",
+  [BPI_MODEL_CM6]     = "Banana Pi CM6[SpacemiT K1]",
 } ;
 
 char *piRevisionNames [16] =
@@ -691,6 +693,11 @@ struct BPIBoards bpiboard [] =
   { "bananapif3",  11801, BPI_MODEL_F3, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_F3, physToGpio_BPI_F3, pinTobcm_BPI_F3 	},
   { "banana-pi-f3", 11801, BPI_MODEL_F3, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_F3, physToGpio_BPI_F3, pinTobcm_BPI_F3 	},
   { "bananapi-f3", 11801, BPI_MODEL_F3, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_F3, physToGpio_BPI_F3, pinTobcm_BPI_F3 	},
+  { "bpi-cm6",     13501, BPI_MODEL_CM6, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_CM6, physToGpio_BPI_CM6, pinTobcm_BPI_CM6 	},
+  { "bananapicm6", 13501, BPI_MODEL_CM6, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_CM6, physToGpio_BPI_CM6, pinTobcm_BPI_CM6 	},
+  { "bananapi-cm6", 13501, BPI_MODEL_CM6, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_CM6, physToGpio_BPI_CM6, pinTobcm_BPI_CM6 	},
+  { "banana-pi-cm6", 13501, BPI_MODEL_CM6, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_CM6, physToGpio_BPI_CM6, pinTobcm_BPI_CM6 	},
+  { "bpi-cm6-io",  13501, BPI_MODEL_CM6, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_CM6, physToGpio_BPI_CM6, pinTobcm_BPI_CM6 	},
   { "bpi-ai2n",    11901, BPI_MODEL_AI2N, 1, 5, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_AI2N, physToGpio_BPI_AI2N, pinTobcm_BPI_AI2N 	},
   { "bpi-ai2-n",   11901, BPI_MODEL_AI2N, 1, 5, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_AI2N, physToGpio_BPI_AI2N, pinTobcm_BPI_AI2N 	},
   { "bananapiai2n", 11901, BPI_MODEL_AI2N, 1, 5, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_AI2N, physToGpio_BPI_AI2N, pinTobcm_BPI_AI2N 	},
@@ -1102,6 +1109,13 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "BPI-M2-Pro") ||
       strstr(hardware, "BPI-M2 Pro"))
     return bpi_find_board_by_name("bpi-m2pro");
+
+  if (strstr(hardware, "BananaPi BPI-CM6") ||
+      strstr(hardware, "Banana Pi BPI-CM6") ||
+      strstr(hardware, "BananaPi CM6") ||
+      strstr(hardware, "Banana Pi CM6") ||
+      strstr(hardware, "BPI-CM6"))
+    return bpi_find_board_by_name("bpi-cm6");
 
   if (strstr(hardware, "BananaPi BPI-F3") ||
       strstr(hardware, "Banana Pi BPI-F3") ||
@@ -2898,7 +2912,8 @@ int bpi_get_rpi_info(rpi_info *info)
                        board->model == BPI_MODEL_CM4IO ||
                        board->model == BPI_MODEL_M5 ||
                        board->model == BPI_MODEL_M2PRO);
-    bpi_found_spacemit = (board->model == BPI_MODEL_F3);
+    bpi_found_spacemit = (board->model == BPI_MODEL_F3 ||
+                           board->model == BPI_MODEL_CM6);
     bpi_found_renesas = (board->model == BPI_MODEL_AI2N);
     bpi_found_rockchip = bpi_model_is_rockchip(board->model);
     if (bpi_found_rockchip == 1)
