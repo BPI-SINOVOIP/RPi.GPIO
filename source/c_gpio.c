@@ -63,6 +63,7 @@ static volatile uint32_t *gpio_map;
 extern int bpi_found;
 extern int bpi_found_mtk;
 extern int bpi_found_mtk_v2;
+extern int bpi_found_mtk_mt7622;
 extern int bpi_found_meson;
 extern int bpi_found_spacemit;
 extern int bpi_found_renesas;
@@ -103,6 +104,9 @@ int setup(void)
 	}
 	if( bpi_found_mtk_v2 == 1){
             return mtk_v2_setup();
+	}
+	if( bpi_found_mtk_mt7622 == 1){
+            return mtk_mt7622_setup();
 	}
 	if (bpi_found_meson == 1) {
             return meson_setup();
@@ -332,6 +336,8 @@ void set_pullupdn(int gpio, int pud)
             mtk_set_pullupdn(gpio, pud);
         } else if (bpi_found_mtk_v2 == 1) {
             mtk_v2_set_pullupdn(gpio, pud);
+        } else if (bpi_found_mtk_mt7622 == 1) {
+            mtk_mt7622_set_pullupdn(gpio, pud);
         } else if (bpi_found_meson == 1) {
             meson_set_pullupdn(gpio, pud);
         } else if (bpi_found_spacemit == 1) {
@@ -404,6 +410,9 @@ void setup_gpio(int gpio, int direction, int pud)
 	}else if (bpi_found_mtk_v2 == 1) {
 		mtk_v2_setup_gpio(gpio, direction, pud);
 		return;
+	}else if (bpi_found_mtk_mt7622 == 1) {
+		mtk_mt7622_setup_gpio(gpio, direction, pud);
+		return;
 	}else if (bpi_found_meson == 1) {
 		meson_setup_gpio(gpio, direction, pud);
 		return;
@@ -455,6 +464,8 @@ int gpio_function(int gpio)
            return mtk_gpio_function(gpio);
        }else if (bpi_found_mtk_v2 == 1) {
            return mtk_v2_gpio_function(gpio);
+       }else if (bpi_found_mtk_mt7622 == 1) {
+           return mtk_mt7622_gpio_function(gpio);
        }else if (bpi_found_meson == 1) {
            return meson_gpio_function(gpio);
        }else if (bpi_found_spacemit == 1) {
@@ -501,6 +512,8 @@ void output_gpio(int gpio, int value)
 		mtk_set_gpio_out(gpio, value);
 	}else if (bpi_found_mtk_v2 == 1) {
 		mtk_v2_output_gpio(gpio, value);
+	}else if (bpi_found_mtk_mt7622 == 1) {
+		mtk_mt7622_output_gpio(gpio, value);
 	}else if (bpi_found_meson == 1) {
 		meson_output_gpio(gpio, value);
 	}else if (bpi_found_spacemit == 1) {
@@ -544,6 +557,9 @@ int input_gpio(int gpio)
       }
       if (bpi_found_mtk_v2 == 1) {
           return mtk_v2_input_gpio(gpio);
+      }
+      if (bpi_found_mtk_mt7622 == 1) {
+          return mtk_mt7622_input_gpio(gpio);
       }
       if (bpi_found_meson == 1) {
           return meson_input_gpio(gpio);
