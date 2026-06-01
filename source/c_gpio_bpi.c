@@ -76,6 +76,7 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_M4BERRY    79
 #define BPI_MODEL_M4ZERO     80
 #define BPI_MODEL_M2S        81
+#define BPI_MODEL_CM4IO      82
 #define BPI_MODELS_MAX       84
 
 #define BPI_MAKER_SINOVOIP    6
@@ -225,6 +226,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_M4BERRY] = "Banana Pi M4 Berry[H618]",
   [BPI_MODEL_M4ZERO]  = "Banana Pi M4 Zero[H618]",
   [BPI_MODEL_M2S]     = "Banana Pi M2S[Amlogic G12B]",
+  [BPI_MODEL_CM4IO]   = "Banana Pi CM4IO[Amlogic G12B]",
 } ;
 
 char *piRevisionNames [16] =
@@ -382,6 +384,12 @@ struct BPIBoards bpiboard [] =
   { "bananapim2s", 11401, BPI_MODEL_M2S, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2S, physToGpio_BPI_M2S, pinTobcm_BPI_M2S 	},
   { "banana-pi-m2s", 11401, BPI_MODEL_M2S, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2S, physToGpio_BPI_M2S, pinTobcm_BPI_M2S 	},
   { "bananapi-m2s", 11401, BPI_MODEL_M2S, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M2S, physToGpio_BPI_M2S, pinTobcm_BPI_M2S 	},
+  { "bpi-cm4io",   11501, BPI_MODEL_CM4IO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_CM4IO, physToGpio_BPI_CM4IO, pinTobcm_BPI_CM4IO 	},
+  { "bpi-cm4-io",  11501, BPI_MODEL_CM4IO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_CM4IO, physToGpio_BPI_CM4IO, pinTobcm_BPI_CM4IO 	},
+  { "bananapicm4io", 11501, BPI_MODEL_CM4IO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_CM4IO, physToGpio_BPI_CM4IO, pinTobcm_BPI_CM4IO 	},
+  { "banana-pi-cm4io", 11501, BPI_MODEL_CM4IO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_CM4IO, physToGpio_BPI_CM4IO, pinTobcm_BPI_CM4IO 	},
+  { "bpi-cm4",     11501, BPI_MODEL_CM4IO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_CM4IO, physToGpio_BPI_CM4IO, pinTobcm_BPI_CM4IO 	},
+  { "bananapicm4", 11501, BPI_MODEL_CM4IO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_CM4IO, physToGpio_BPI_CM4IO, pinTobcm_BPI_CM4IO 	},
   { "bpi-r2",      11101, BPI_MODEL_R2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2,  physToGpio_BPI_R2,  pinTobcm_BPI_R2    },
   { NULL,		0, 0, 1, 2, BPI_MAKER_SINOVOIP, 0, NULL, NULL, NULL 	},
 } ;
@@ -416,6 +424,15 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "Banana Pi M2S") ||
       strstr(hardware, "BPI-M2S"))
     return bpi_find_board_by_name("bpi-m2s");
+
+  if (strstr(hardware, "Bananapi BPI-CM4") ||
+      strstr(hardware, "BananaPi BPI-CM4") ||
+      strstr(hardware, "Banana Pi BPI-CM4") ||
+      strstr(hardware, "BananaPi BPI-CM4IO") ||
+      strstr(hardware, "Banana Pi BPI-CM4IO") ||
+      strstr(hardware, "BPI-CM4IO") ||
+      strstr(hardware, "BPI-CM4"))
+    return bpi_find_board_by_name("bpi-cm4io");
 
   return NULL;
 }
@@ -1105,7 +1122,7 @@ int bpi_get_rpi_info(rpi_info *info)
 	printf("found mtk board\n");
     }
     bpi_found_sun50iw9 = (board->model == BPI_MODEL_M4BERRY || board->model == BPI_MODEL_M4ZERO);
-    bpi_found_meson = (board->model == BPI_MODEL_M2S);
+    bpi_found_meson = (board->model == BPI_MODEL_M2S || board->model == BPI_MODEL_CM4IO);
     sprintf(manufacturer, "%s", piMakerNames [board->maker]);
     info->p1_revision = 3;
     info->type = type;
