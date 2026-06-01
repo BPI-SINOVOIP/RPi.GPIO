@@ -146,14 +146,14 @@ The supported IO surface is:
 | BPI-R3 Mini | blocked | Official docs only show generic sysfs GPIO examples and board interfaces; no authoritative 26/40-pin expansion header map was found. Do not alias it to R3 without a confirmed carrier/header map. |
 | BPI-R64 | done | Added MT7622 GPIO support using the official R64 40-pin GPIO image (`r64_gpio_40.jpg`) and mainline `pinctrl-mt7622` register ranges (`pinctrl@10211000`). Basic setup/input/output/read/write and pull-up/down extension build-tested. |
 | BPI-R4 Lite | done | Added MT7987 GPIO v2 support by reusing the MTK v2 mmap backend (`pio@1001f000`) and the Armbian 6.17 `mt7987a-bananapi-bpi-r4-lite-mikrobus.dtsi` map. BOARD mode follows the 2x8 MikroBUS physical pins 1-16; GPIO-capable pins are 5/6/7/8/10/11/12/13/14 only. Pull control remains no-op pending hardware validation. |
-| BPI-R4 Pro | todo | MT7988 backend should be reusable, but the Pro-specific header/export map must be confirmed before adding aliases. |
+| BPI-R4 Pro | done | Added MT7988 GPIO v2 support using the Armbian 6.17 `mt7988a-bananapi-bpi-r4-pro.dtsi` 26-pin map. The physical header matches the existing R4 map, but R4 Pro has its own board aliases/header so later 4e/8x differences can be adjusted independently. Detection now checks `/proc/device-tree/compatible` before the model string because the 4e/8x DTS model string is still generic `Bananapi BPI-R4`. Pull control remains no-op pending hardware validation. |
 | BPI-R2 Mini / R4 Mini / OpenWrt One | blocked | Armbian target is blocked/deferred; wait for board files and IO header policy. |
 | BPI-WiFi5 / WiFi6 / RT2 / RV2 | deferred | Router/OpenWrt image flows; no generic RPi.GPIO target until IO header requirement is defined. |
 | BPI-F2 / F4 / F5 / S64 / Secure-Pi / SM9 / AI2H / Loongson boards | blocked | Need vendor BSP, kernel DTS, pinout, and/or new SoC backend before implementation. |
 
 ## Current Next Item
 
-Continue Batch E router/service-header review from `BPI-R4 Pro`.
+Continue Batch E router/service-header review from `BPI-R2 Mini / R4 Mini / OpenWrt One`.
 
 Resume sequence:
 

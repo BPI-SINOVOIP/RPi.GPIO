@@ -101,7 +101,8 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_R3         104
 #define BPI_MODEL_R64        105
 #define BPI_MODEL_R4LITE     106
-#define BPI_MODELS_MAX       107
+#define BPI_MODEL_R4PRO      107
+#define BPI_MODELS_MAX       108
 
 #define BPI_MAKER_SINOVOIP    6
 
@@ -591,6 +592,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_R3]      = "Banana Pi R3[MT7986]",
   [BPI_MODEL_R64]     = "Banana Pi R64[MT7622]",
   [BPI_MODEL_R4LITE]  = "Banana Pi R4 Lite[MT7987]",
+  [BPI_MODEL_R4PRO]   = "Banana Pi R4 Pro[MT7988]",
 } ;
 
 char *piRevisionNames [16] =
@@ -882,6 +884,14 @@ struct BPIBoards bpiboard [] =
   { "bananapi-r4lite", 13901, BPI_MODEL_R4LITE, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4LITE, physToGpio_BPI_R4LITE, pinTobcm_BPI_R4LITE 	},
   { "bananapi-r4-lite", 13901, BPI_MODEL_R4LITE, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4LITE, physToGpio_BPI_R4LITE, pinTobcm_BPI_R4LITE 	},
   { "banana-pi-r4-lite", 13901, BPI_MODEL_R4LITE, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4LITE, physToGpio_BPI_R4LITE, pinTobcm_BPI_R4LITE 	},
+  { "bpi-r4pro",  14001, BPI_MODEL_R4PRO, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4PRO, physToGpio_BPI_R4PRO, pinTobcm_BPI_R4PRO 	},
+  { "bpi-r4-pro", 14001, BPI_MODEL_R4PRO, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4PRO, physToGpio_BPI_R4PRO, pinTobcm_BPI_R4PRO 	},
+  { "bpi-r4-pro-4e", 14001, BPI_MODEL_R4PRO, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4PRO, physToGpio_BPI_R4PRO, pinTobcm_BPI_R4PRO 	},
+  { "bpi-r4-pro-8x", 14001, BPI_MODEL_R4PRO, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4PRO, physToGpio_BPI_R4PRO, pinTobcm_BPI_R4PRO 	},
+  { "bananapir4pro", 14001, BPI_MODEL_R4PRO, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4PRO, physToGpio_BPI_R4PRO, pinTobcm_BPI_R4PRO 	},
+  { "bananapi-r4pro", 14001, BPI_MODEL_R4PRO, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4PRO, physToGpio_BPI_R4PRO, pinTobcm_BPI_R4PRO 	},
+  { "bananapi-r4-pro", 14001, BPI_MODEL_R4PRO, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4PRO, physToGpio_BPI_R4PRO, pinTobcm_BPI_R4PRO 	},
+  { "banana-pi-r4-pro", 14001, BPI_MODEL_R4PRO, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4PRO, physToGpio_BPI_R4PRO, pinTobcm_BPI_R4PRO 	},
   { "bpi-r2",      11101, BPI_MODEL_R2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2,  physToGpio_BPI_R2,  pinTobcm_BPI_R2    },
   { NULL,		0, 0, 1, 2, BPI_MAKER_SINOVOIP, 0, NULL, NULL, NULL 	},
 } ;
@@ -1242,6 +1252,21 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "BPI-AI2N"))
     return bpi_find_board_by_name("bpi-ai2n");
 
+  if (strstr(hardware, "Bananapi BPI-R4 Pro") ||
+      strstr(hardware, "BananaPi BPI-R4 Pro") ||
+      strstr(hardware, "Banana Pi BPI-R4 Pro") ||
+      strstr(hardware, "BananaPi R4 Pro") ||
+      strstr(hardware, "Banana Pi R4 Pro") ||
+      strstr(hardware, "BPI-R4-Pro") ||
+      strstr(hardware, "BPI-R4 Pro") ||
+      strstr(hardware, "BPI-R4_PRO") ||
+      strstr(hardware, "bananapi,bpi-r4-pro") ||
+      strstr(hardware, "bananapi,bpi-r4-pro-4e") ||
+      strstr(hardware, "bananapi,bpi-r4-pro-8x") ||
+      strstr(hardware, "mt7988a-bananapi-bpi-r4-pro") ||
+      strstr(hardware, "mt7988a-bananapi_bpi-r4-pro"))
+    return bpi_find_board_by_name("bpi-r4-pro");
+
   if (strstr(hardware, "Bananapi BPI-R4-LITE") ||
       strstr(hardware, "Bananapi BPI-R4 Lite") ||
       strstr(hardware, "BananaPi BPI-R4-LITE") ||
@@ -1316,6 +1341,33 @@ static int bpi_set_layout_from_board(struct BPIBoards *board, int *gpioLayout)
   }
 
   return 0;
+}
+
+static int bpi_read_dt_string_file(const char *path, char *hardware, size_t hardware_size)
+{
+  FILE *bpiFd;
+  size_t count;
+  size_t i;
+
+  if (hardware_size == 0)
+    return 0;
+
+  bpiFd = fopen(path, "r");
+  if (bpiFd == NULL)
+    return 0;
+
+  count = fread(hardware, 1, hardware_size - 1, bpiFd);
+  fclose(bpiFd);
+  if (count == 0)
+    return 0;
+
+  hardware[count] = '\0';
+  for (i = 0; i < count; ++i) {
+    if (hardware[i] == '\0' || hardware[i] == '\n')
+      hardware[i] = ' ';
+  }
+
+  return 1;
 }
 
 
@@ -3389,12 +3441,14 @@ int bpi_piGpioLayout (void)
     fclose(bpiFd);
   }
 
-  if (bpi_found != 1 && (bpiFd = fopen("/proc/device-tree/model", "r")) != NULL) {
-    if (fgets(hardware, sizeof(hardware), bpiFd) != NULL) {
-      board = bpi_find_board_by_model_string(hardware);
-      bpi_set_layout_from_board(board, &gpioLayout);
-    }
-    fclose(bpiFd);
+  if (bpi_found != 1 && bpi_read_dt_string_file("/proc/device-tree/compatible", hardware, sizeof(hardware))) {
+    board = bpi_find_board_by_model_string(hardware);
+    bpi_set_layout_from_board(board, &gpioLayout);
+  }
+
+  if (bpi_found != 1 && bpi_read_dt_string_file("/proc/device-tree/model", hardware, sizeof(hardware))) {
+    board = bpi_find_board_by_model_string(hardware);
+    bpi_set_layout_from_board(board, &gpioLayout);
   }
 
   //printf("BPI: name[%s] gpioLayout(%d)\n",board->name, gpioLayout);
@@ -3429,7 +3483,8 @@ int bpi_get_rpi_info(rpi_info *info)
     }
     bpi_found_mtk_v2 = (board->model == BPI_MODEL_R4 ||
                          board->model == BPI_MODEL_R3 ||
-                         board->model == BPI_MODEL_R4LITE);
+                         board->model == BPI_MODEL_R4LITE ||
+                         board->model == BPI_MODEL_R4PRO);
     bpi_found_mtk_mt7622 = (board->model == BPI_MODEL_R64);
     bpi_found_sun50iw9 = (board->model == BPI_MODEL_M4BERRY || board->model == BPI_MODEL_M4ZERO);
     bpi_found_meson = (board->model == BPI_MODEL_M2S ||
