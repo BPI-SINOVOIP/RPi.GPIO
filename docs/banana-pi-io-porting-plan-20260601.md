@@ -102,7 +102,8 @@ The supported IO surface is:
 | --- | --- | --- | --- |
 | BPI-M4 Berry | Allwinner H618 | done | Added initial H618 GPIO mmap path, board aliases, DT model detection, and 40-pin GPIO map from official BPI docs/Dangku reference; local extension build passed. |
 | BPI-M4 Zero | Allwinner H618 | done | Added H618 GPIO map, board aliases, DT model detection, and local extension build checks. |
-| BPI-CM4IO / BPI-M2S | Amlogic G12B | todo | Needs meson GPIO backend and carrier-specific 40-pin map. |
+| BPI-M2S | Amlogic G12B | done | Added first Meson GPIO mmap backend, M2S aliases/model detection, and 40-pin map from Armbian DTS plus Dangku Amlogic reference maps; local extension build passed. |
+| BPI-CM4IO | Amlogic G12B | todo | Reuse Meson backend after M2S, but keep carrier-specific 40-pin map separate. |
 | BPI-M2 Pro / BPI-M5 | Amlogic SM1 | todo | Likely shares meson backend, but board maps must be checked individually. |
 | BPI-F3 | SpacemiT K1 | todo | Needs K1 GPIO backend and official header map. |
 | BPI-AI2N | Renesas RZ/V2N | todo | Needs RZ/V2N GPIO backend and Banana Pi header map. |
@@ -137,7 +138,10 @@ The supported IO surface is:
 
 ## Current Next Item
 
-Start with Batch A:
+Continue Batch B from `BPI-CM4IO`.
 
-Move to Batch B after committing and pushing the CS6202/CS6204 alias set in both
-repositories.
+Resume sequence:
+
+1. Finish `BPI-CM4IO` in `BPI-WiringPi2`, build-test, commit, and push.
+2. Finish `BPI-CM4IO` in this repo, build-test, commit, and push.
+3. Continue with `BPI-M5` and `BPI-M2 Pro` after confirming the SM1 maps.
