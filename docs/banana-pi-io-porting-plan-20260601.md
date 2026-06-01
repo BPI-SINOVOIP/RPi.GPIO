@@ -120,7 +120,8 @@ The supported IO surface is:
 | BPI-W3 | RK3588 | done | Added W3 aliases/model detection and a W3-specific RK3588 40-pin map from the official Banana Pi W3 GPIO table plus Armbian `rk3588-bananapi-w3`. The W3 table matches M7 for most pins but leaves physical pin 37 unassigned, so this repo keeps pin 37 as non-GPIO instead of aliasing W3 to M7. Basic GPIO input/output/read/write extension build-tested; pull remains no-op pending RK3588 GRF pinctrl hardware validation. |
 | BPI-AIM7 IO | RK3588 | alias | Added AIM7 aliases/model detection using the M7-compatible 40-pin map from the official BPI-AIM7 development kit table plus Armbian `rk3588-armsom-aim7-io`. Basic GPIO input/output/read/write extension build-tested; pull remains no-op pending RK3588 GRF pinctrl hardware validation. |
 | BPI-LM7 | RK3588 module | blocked | Official LM7 documentation describes the LGA core module, not a fixed 40-pin header. Needs an exact carrier/baseboard GPIO map before adding an alias. |
-| BPI-M1 Super / M4 Super / Forge1 / P2 Pro | RK3528/RK3568/RK3506/RK3308 | todo | Needs per-SoC backend review. |
+| BPI-M4 Super | RK3568 | done | Added M4 Super aliases/model detection using the existing RK3568 Rockchip GPIO v2 mmap backend. The 40-pin map is from the official Banana Pi M4 Super GPIO table plus Armbian `rk3568-armsom-sige3`. Basic GPIO input/output/read/write extension build-tested; pull remains no-op pending RK3568 GRF pinctrl hardware validation. |
+| BPI-M1 Super / Forge1 / P2 Pro | RK3528/RK3506/RK3308 | todo | Needs per-SoC backend review and exact GPIO backend base/register compatibility. |
 
 ### Batch D: vendor or WIP boards
 
@@ -143,12 +144,12 @@ The supported IO surface is:
 
 ## Current Next Item
 
-Continue Batch C from `BPI-M1 Super / M4 Super / Forge1 / P2 Pro`.
+Continue Batch C from `BPI-M1 Super / Forge1 / P2 Pro`.
 
 Resume sequence:
 
 1. Confirm exact SoC GPIO backends and 40-pin/carrier maps for
-   `BPI-M1 Super / M4 Super / Forge1 / P2 Pro`.
+   `BPI-M1 Super / Forge1 / P2 Pro`.
 2. Add one board or exact carrier alias set at a time in `BPI-WiringPi2`,
    build-test, commit, and push.
 3. Add the same board in this repo, build-test, commit, and push.

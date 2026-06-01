@@ -87,7 +87,8 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_M7         90
 #define BPI_MODEL_W3         91
 #define BPI_MODEL_AIM7       92
-#define BPI_MODELS_MAX       93
+#define BPI_MODEL_M4SUPER    93
+#define BPI_MODELS_MAX       94
 
 #define BPI_MAKER_SINOVOIP    6
 
@@ -337,6 +338,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_M7]      = "Banana Pi M7[RK3588]",
   [BPI_MODEL_W3]      = "Banana Pi W3[RK3588]",
   [BPI_MODEL_AIM7]    = "Banana Pi AIM7[RK3588]",
+  [BPI_MODEL_M4SUPER] = "Banana Pi M4 Super[RK3568]",
 } ;
 
 char *piRevisionNames [16] =
@@ -557,6 +559,13 @@ struct BPIBoards bpiboard [] =
   { "bananapi-aim7", 12501, BPI_MODEL_AIM7, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M7, physToGpio_BPI_M7, pinTobcm_BPI_M7 	},
   { "armsom-aim7", 12501, BPI_MODEL_AIM7, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M7, physToGpio_BPI_M7, pinTobcm_BPI_M7 	},
   { "armsom-aim7-io", 12501, BPI_MODEL_AIM7, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M7, physToGpio_BPI_M7, pinTobcm_BPI_M7 	},
+  { "bpi-m4super", 12601, BPI_MODEL_M4SUPER, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M4SUPER, physToGpio_BPI_M4SUPER, pinTobcm_BPI_M4SUPER 	},
+  { "bpi-m4-super", 12601, BPI_MODEL_M4SUPER, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M4SUPER, physToGpio_BPI_M4SUPER, pinTobcm_BPI_M4SUPER 	},
+  { "bananapim4super", 12601, BPI_MODEL_M4SUPER, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M4SUPER, physToGpio_BPI_M4SUPER, pinTobcm_BPI_M4SUPER 	},
+  { "banana-pi-m4-super", 12601, BPI_MODEL_M4SUPER, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M4SUPER, physToGpio_BPI_M4SUPER, pinTobcm_BPI_M4SUPER 	},
+  { "bananapi-m4super", 12601, BPI_MODEL_M4SUPER, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M4SUPER, physToGpio_BPI_M4SUPER, pinTobcm_BPI_M4SUPER 	},
+  { "bananapi-m4-super", 12601, BPI_MODEL_M4SUPER, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M4SUPER, physToGpio_BPI_M4SUPER, pinTobcm_BPI_M4SUPER 	},
+  { "armsom-sige3", 12601, BPI_MODEL_M4SUPER, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_M4SUPER, physToGpio_BPI_M4SUPER, pinTobcm_BPI_M4SUPER 	},
   { "bpi-r2",      11101, BPI_MODEL_R2, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2,  physToGpio_BPI_R2,  pinTobcm_BPI_R2    },
   { NULL,		0, 0, 1, 2, BPI_MAKER_SINOVOIP, 0, NULL, NULL, NULL 	},
 } ;
@@ -587,6 +596,7 @@ static int bpi_model_is_rk3588(int model)
 static int bpi_model_is_rockchip(int model)
 {
   return model == BPI_MODEL_R2PRO ||
+      model == BPI_MODEL_M4SUPER ||
       bpi_model_is_rk3576(model) ||
       bpi_model_is_rk3588(model);
 }
@@ -689,6 +699,17 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "armsom,aim7") ||
       strstr(hardware, "rk3588-armsom-aim7-io"))
     return bpi_find_board_by_name("bpi-aim7");
+
+  if (strstr(hardware, "Banana Pi BPI-M4 Super") ||
+      strstr(hardware, "BananaPi BPI-M4 Super") ||
+      strstr(hardware, "Banana Pi M4 Super") ||
+      strstr(hardware, "BananaPi M4 Super") ||
+      strstr(hardware, "BPI-M4 Super") ||
+      strstr(hardware, "ArmSom Sige3") ||
+      strstr(hardware, "ArmSoM Sige3") ||
+      strstr(hardware, "armsom,sige3") ||
+      strstr(hardware, "rk3568-armsom-sige3"))
+    return bpi_find_board_by_name("bpi-m4-super");
 
   if (strstr(hardware, "Banana Pi BPI-M5") ||
       strstr(hardware, "BananaPi BPI-M5") ||
