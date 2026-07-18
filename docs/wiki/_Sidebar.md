@@ -4,6 +4,7 @@
 - [Build and Install](Build-and-Install)
 - [Quick Start](Quick-Start)
 - [Board Support Matrix](Board-Support-Matrix)
+- [OpenWrt One GPIO](OpenWrt-One)
 - [Numbering and Detection](Numbering-and-Detection)
 - [Porting a New Board](Porting-a-New-Board)
 - [Hardware Validation](Hardware-Validation)

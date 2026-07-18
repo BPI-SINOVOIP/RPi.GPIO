@@ -806,4 +806,5 @@ const int physToGpio_BP [64] =
 #include "bpi-r64.h"
 #include "bpi-r4lite.h"
 #include "bpi-r4pro.h"
+#include "openwrt-one.h"
 #endif

@@ -13,6 +13,8 @@ BPI-F4 is a documented exception to the usual single-header layout: `GPIO.BOARD`
 
 BPI-SM10 uses the carrier's J12 40-pin header. Its map is traced through the level shifters and CoM260 SODIMM nets to K3 global GPIO/pad numbers; physical pin 18 is unavailable because no GPIO connection is published. BPI-CanMV-K230D Zero uses JP1 and the GPIO numbers in the official table; physical pin 16 is unavailable because its published row has no GPIO number. Neither gap is inferred from a peripheral label.
 
+OpenWrt One uses the standard 16-pin CN7 mikroBUS numbering in `GPIO.BOARD` mode. GPIO-capable pins are 3-8 and 10-14; pin 9 is the analog `AN` input and is not exposed by the digital mmap backend. `GPIO.BCM` channels are the native MT7981 lines `2,4,5,6,7,10,12,22,23,24,25`, matching the exact DTS, official KiCad nets and upstream pinctrl data.
+
 ## Board detection
 
 Detection aliases and Banana Pi model selection are maintained in `source/c_gpio_bpi.c`. Board-specific maps are included through `source/bpi_gpio.h` and the relevant `source/bpi-*.h` headers.

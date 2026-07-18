@@ -105,7 +105,8 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_F4         108
 #define BPI_MODEL_SM10       109
 #define BPI_MODEL_K230D_ZERO 110
-#define BPI_MODELS_MAX       111
+#define BPI_MODEL_OPENWRT_ONE 111
+#define BPI_MODELS_MAX       112
 
 #define BPI_MAKER_SINOVOIP    6
 
@@ -134,6 +135,7 @@ static volatile uint32_t *gpio_map;
 #define MTK_GPIO_FIELD_PINS_PER_REG		16
 
 #define MTK_V2_GPIO_BASE_ADDR			0x1001F000
+#define MTK_MT7981_GPIO_BASE_ADDR		0x11D00000
 #define MTK_V2_GPIO_DIR			0x00
 #define MTK_V2_GPIO_DOUT			0x100
 #define MTK_V2_GPIO_DIN			0x200
@@ -469,6 +471,7 @@ const int *pinTobcm_BP ;
 
 static volatile uint32_t *r_gpio_map;
 static uint8_t *mtk_v2_gpio_map = NULL;
+static off_t mtk_v2_gpio_phys_base = MTK_V2_GPIO_BASE_ADDR;
 static uint8_t *mtk_mt7622_gpio_map = NULL;
 static volatile uint32_t *spacemit_gpio_map;
 static volatile uint32_t *spacemit_pinctrl_map;
@@ -651,6 +654,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_F4]      = "Banana Pi F4[Sunplus SP7350]",
   [BPI_MODEL_SM10]    = "Banana Pi SM10[SpacemiT K3]",
   [BPI_MODEL_K230D_ZERO] = "Banana Pi CanMV-K230D-Zero[Kendryte K230D]",
+  [BPI_MODEL_OPENWRT_ONE] = "OpenWrt One[MT7981B]",
 } ;
 
 char *piRevisionNames [16] =
@@ -936,6 +940,9 @@ struct BPIBoards bpiboard [] =
   { "bpi-k230d-zero",             14301, BPI_MODEL_K230D_ZERO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_K230D_ZERO, physToGpio_BPI_K230D_ZERO, pinTobcm_BPI_K230D_ZERO 	},
   { "bananapi-canmv-k230d-zero",  14301, BPI_MODEL_K230D_ZERO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_K230D_ZERO, physToGpio_BPI_K230D_ZERO, pinTobcm_BPI_K230D_ZERO 	},
   { "banana-pi-canmv-k230d-zero", 14301, BPI_MODEL_K230D_ZERO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_K230D_ZERO, physToGpio_BPI_K230D_ZERO, pinTobcm_BPI_K230D_ZERO 	},
+  { "openwrt-one", 14401, BPI_MODEL_OPENWRT_ONE, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_OPENWRT_ONE, physToGpio_OPENWRT_ONE, pinTobcm_OPENWRT_ONE 	},
+  { "openwrt,one", 14401, BPI_MODEL_OPENWRT_ONE, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_OPENWRT_ONE, physToGpio_OPENWRT_ONE, pinTobcm_OPENWRT_ONE 	},
+  { "ap-24.xy",   14401, BPI_MODEL_OPENWRT_ONE, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_OPENWRT_ONE, physToGpio_OPENWRT_ONE, pinTobcm_OPENWRT_ONE 	},
   { "bpi-r4",      13601, BPI_MODEL_R4, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4, physToGpio_BPI_R4, pinTobcm_BPI_R4 	},
   { "bananapir4",  13601, BPI_MODEL_R4, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4, physToGpio_BPI_R4, pinTobcm_BPI_R4 	},
   { "bananapi-r4", 13601, BPI_MODEL_R4, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4, physToGpio_BPI_R4, pinTobcm_BPI_R4 	},
@@ -1267,6 +1274,13 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "BPI-CanMV-K230D Zero") ||
       strstr(hardware, "bananapi-canmv-k230d-zero"))
     return bpi_find_board_by_name("bpi-canmv-k230d-zero");
+
+  if (strstr(hardware, "OpenWrt One") ||
+      strstr(hardware, "OpenWRT One") ||
+      strstr(hardware, "openwrt,one") ||
+      strstr(hardware, "AP-24.XY") ||
+      strstr(hardware, "AP-24.xy"))
+    return bpi_find_board_by_name("openwrt-one");
 
   if (strstr(hardware, "Banana Pi BPI-M1 Super") ||
       strstr(hardware, "BananaPi BPI-M1 Super") ||
@@ -1748,7 +1762,7 @@ int mtk_v2_setup(void)
     }
 
     mtk_v2_gpio_map = (uint8_t *)mmap(NULL, MTK_V2_GPIO_MAP_SIZE, PROT_READ | PROT_WRITE,
-                                      MAP_SHARED, gpio_mmap_fd, MTK_V2_GPIO_BASE_ADDR);
+                                      MAP_SHARED, gpio_mmap_fd, mtk_v2_gpio_phys_base);
     if (mtk_v2_gpio_map == MAP_FAILED) {
         perror("mmap MTK GPIO v2");
         fprintf(stderr, "failed to mmap MTK GPIO v2");
@@ -3964,7 +3978,10 @@ int bpi_get_rpi_info(rpi_info *info)
     bpi_found_mtk_v2 = (board->model == BPI_MODEL_R4 ||
                          board->model == BPI_MODEL_R3 ||
                          board->model == BPI_MODEL_R4LITE ||
-                         board->model == BPI_MODEL_R4PRO);
+                         board->model == BPI_MODEL_R4PRO ||
+                         board->model == BPI_MODEL_OPENWRT_ONE);
+    mtk_v2_gpio_phys_base = (board->model == BPI_MODEL_OPENWRT_ONE) ?
+                            MTK_MT7981_GPIO_BASE_ADDR : MTK_V2_GPIO_BASE_ADDR;
     bpi_found_mtk_mt7622 = (board->model == BPI_MODEL_R64);
     bpi_found_sun50iw9 = (board->model == BPI_MODEL_M4BERRY || board->model == BPI_MODEL_M4ZERO);
     bpi_found_meson = (board->model == BPI_MODEL_M2S ||
@@ -3994,7 +4011,9 @@ int bpi_get_rpi_info(rpi_info *info)
     if(bpi_found_mtk == 1){
         info->processor = "MTK";
     }else if (bpi_found_mtk_v2 == 1) {
-        if (board->model == BPI_MODEL_R3)
+        if (board->model == BPI_MODEL_OPENWRT_ONE)
+            info->processor = "MT7981B";
+        else if (board->model == BPI_MODEL_R3)
             info->processor = "MT7986";
         else if (board->model == BPI_MODEL_R4LITE)
             info->processor = "MT7987";
