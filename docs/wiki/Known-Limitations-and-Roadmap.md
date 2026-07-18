@@ -13,9 +13,12 @@
 
 ### Software-startable
 
-1. BPI-F4 / Sunplus SP7350.
-2. BPI-SM10 / SpacemiT K3.
-3. BPI-CanMV-K230D Zero / Canaan K230D.
+1. BPI-SM10 / SpacemiT K3.
+2. BPI-CanMV-K230D Zero / Canaan K230D.
+
+### Implemented but hardware validation required
+
+BPI-F4 / Sunplus SP7350 has basic direction/read/write support and a terminal-row map. Pull, exact production detection identity and real hardware behavior remain unverified.
 
 ### Needs exact internal board evidence
 

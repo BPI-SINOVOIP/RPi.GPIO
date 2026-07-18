@@ -9,6 +9,8 @@
 
 Internally, the backend also needs the native SoC GPIO bank/line or Linux gpiochip offset. Do not expose or document that controller identifier as though it were universally interchangeable with `GPIO.BCM`.
 
+BPI-F4 is a documented exception to the usual single-header layout: `GPIO.BOARD` numbers 1-29 are rows in the official combined terminal table across CN8/CN3/CN7/CN6/CN5/CN1/CN4, not connector-local pin labels. `GPIO.BCM` channels 0-19 follow the GPIO-bearing table rows in order and map to native SP7350 lines `84,85,71,70,81,80,83,82,60,61,69,68,72,73,74,75,59,58,56,57`.
+
 ## Board detection
 
 Detection aliases and Banana Pi model selection are maintained in `source/c_gpio_bpi.c`. Board-specific maps are included through `source/bpi_gpio.h` and the relevant `source/bpi-*.h` headers.

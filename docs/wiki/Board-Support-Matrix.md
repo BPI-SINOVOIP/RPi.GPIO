@@ -16,7 +16,7 @@ Status date: 2026-07-18
 | `needs-review` | The product exists but the two GPIO repositories still need an explicit support decision. |
 | `out-of-scope` | `RPi.GPIO` is not the correct interface for the product. |
 
-The normalized Banana Pi catalog has 110 products: 14 `implemented`, 9 `alias`, 18 `limited`, 6 `carrier-only`, 3 `base-covered`, 15 `blocked`, 9 `deferred`, 5 `needs-review` and 31 `out-of-scope`. Customer-private boards are excluded.
+The normalized Banana Pi catalog has 110 products: 14 `implemented`, 9 `alias`, 19 `limited`, 6 `carrier-only`, 3 `base-covered`, 14 `blocked`, 9 `deferred`, 5 `needs-review` and 31 `out-of-scope`. Customer-private boards are excluded.
 
 ## Code-backed families
 
@@ -28,16 +28,19 @@ The repository contains Banana Pi model paths for these major families:
 - SpacemiT K1: F3 and CM6 IO carrier.
 - Renesas RZ/V2N: AI2N carrier path.
 - Rockchip: R2 Pro, M5 Pro/CM5 Pro IO, M7, W3, AIM7, M4 Super, M1 Super, Forge1 and P2 Pro.
-- Realtek/Synaptics/Sunplus: W2, M4, M6, F2S and F2P.
+- Realtek/Synaptics/Sunplus: W2, M4, M6, F2S, F2P and F4.
 - MediaTek: R2, R3, R4, R4 Lite, R4 Pro, R64.
 
 This list says a code path exists. Read the per-board row in the [porting plan](https://github.com/BPI-SINOVOIP/RPi.GPIO/blob/bpi-legacy-io-porting/docs/banana-pi-io-porting-plan-20260601.md) for capability and validation limits.
 
 ## Current software-startable work
 
-1. BPI-F4 — implement SP7350 detection, mapping and Python backend selection using the official terminal map/Q654 source; then obtain exact DTS/gpioinfo/hardware logs.
-2. BPI-SM10 — finish signal-to-controller mapping for the official 40-pin carrier and exact K3 DTS, then implement/test the Python path.
-3. BPI-CanMV-K230D Zero — derive Linux gpiochip/offset from the official 40-pin/SDK evidence and implement without guessing runtime numbering.
+1. BPI-SM10 — finish signal-to-controller mapping for the official 40-pin carrier and exact K3 DTS, then implement/test the Python path.
+2. BPI-CanMV-K230D Zero — derive Linux gpiochip/offset from the official 40-pin/SDK evidence and implement without guessing runtime numbering.
+
+## Hardware-validation work
+
+BPI-F4 now has a source-backed SP7350 backend, four detection aliases and a 20-line terminal-table map. It remains `limited`: `GPIO.BOARD` means official terminal-table row 1-29, pull is a no-op, and exact production DTS/gpioinfo/digital-I/O logs are still required.
 
 ## Still blocked by exact internal evidence
 

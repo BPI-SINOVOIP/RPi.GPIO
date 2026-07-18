@@ -163,7 +163,8 @@ The supported IO surface is:
 | BPI-R4 Mini | blocked | Public product data still lacks an exact external connector map, schematic, BSP/OpenWrt profile and runtime evidence. |
 | OpenWrt One | scope-review | Official schematic/KiCad and mikroBUS evidence now exist. Decide whether this library should cover mikroBUS, then map connector pins to MT7981 GPIO and validate on hardware. |
 | BPI-WiFi5 / WiFi6 / RT2 / RV2 | deferred | Reviewed local Armbian board matrix/docs on 2026-06-02: WiFi6 is Triductor/OpenWrt BSP only, RT2 is Realtek OpenWrt UBI flow, and WiFi5/RV2 are Siflower OpenWrt/FIT/web-upgrade flows with no local Armbian board family. No stable raw-image board target or external GPIO header policy exists for RPi.GPIO. |
-| BPI-F2 / F4 / F5 / S64 / Secure-Pi / SM9 / AI2H / Loongson boards | blocked | Reviewed local Armbian priority docs on 2026-06-02: F2 lacks exact i.MX6 BPI board files; F4 needs a new SP7350 Sunplus family; F5 has no BPI-F5 T527 DTS/defconfig; S64 lacks Actions S700 Armbian/U-Boot targets; Secure-Pi has example repos but no Linux/U-Boot BSP; SM9 needs BM1688 SDK/boot-chain integration; AI2H has Renesas EVK files but no Banana Pi carrier DTS/DDR/board hook; Loongson boards need exact embedded U-Boot/BIOS/DTS/image policy beyond generic `uefi-loong64`. Do not add GPIO aliases until exact board files and header maps exist. |
+| BPI-F4 | limited | Added SP7350 direct-register GPIO support from the official Sunplus kernel driver (`FIRST`, `MASTER`, output-enable, output and input registers), four board aliases, and a 20-line terminal-table map. `GPIO.BOARD` means official terminal-table row 1-29 because F4 uses several terminal blocks. The native extension builds locally. Pull control is intentionally a no-op; exact production DTS identity and hardware GPIO behavior remain unverified. |
+| BPI-F2 / F5 / S64 / Secure-Pi / SM9 / AI2H / Loongson boards | blocked | Reviewed local Armbian priority docs on 2026-06-02: F2 lacks exact i.MX6 BPI board files; F5 has no BPI-F5 T527 DTS/defconfig; S64 lacks Actions S700 Armbian/U-Boot targets; Secure-Pi has example repos but no Linux/U-Boot BSP; SM9 needs BM1688 SDK/boot-chain integration; AI2H has Renesas EVK files but no Banana Pi carrier DTS/DDR/board hook; Loongson boards need exact embedded U-Boot/BIOS/DTS/image policy beyond generic `uefi-loong64`. Do not add GPIO aliases until exact board files and header maps exist. |
 
 ## 2026-07-18 Canonical Matrix Reconciliation
 
@@ -171,7 +172,7 @@ This section supersedes stale discovery statements in the 2026-06-01 batches.
 
 | Board/group | Current decision | Evidence-driven next action |
 | --- | --- | --- |
-| BPI-F4 | `todo` | Official terminal map, Q654 source, schematic and image exist; start SP7350 backend/detection work, then obtain exact DTS/gpioinfo/hardware logs. |
+| BPI-F4 | `limited` | SP7350 backend/detection and the official 20-GPIO terminal-row map now exist and the native extension builds locally. Obtain exact production DTS/model/compatible, gpioinfo and hardware logs; validate pull/pad state before widening the claim. |
 | BPI-CanMV-K230D Zero | `todo` | Official 40-pin table, schematic and SDK exist; derive Linux gpiochip/offset and implement board mapping/backend without guessing runtime numbering. |
 | BPI-SM10 | `todo` | Official 40-pin table/schematic and local exact K3 DTS exist; complete signal-to-controller mapping, backend and tests. |
 | BPI-CM5 + CM4IO | `blocked` | CM4IO claims CM5 compatibility, but the published table is CM4/A311D context; require CM5/A311D2-specific carrier/DTS/gpioinfo evidence. |
@@ -185,7 +186,8 @@ This section supersedes stale discovery statements in the 2026-06-01 batches.
 ## Current Next Item
 
 The old “No remaining planned `todo` items” conclusion is retired. The next
-software-startable sequence is BPI-F4, BPI-SM10, then BPI-CanMV-K230D Zero;
+software-startable sequence is BPI-SM10, then BPI-CanMV-K230D Zero. BPI-F4
+has moved to hardware-validation work with an explicit `limited` status;
 boards without exact evidence remain blocked by the Wiki evidence contract.
 
 Resume sequence:

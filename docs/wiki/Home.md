@@ -14,7 +14,7 @@ This repository adapts the familiar `RPi.GPIO` Python API to supported Banana Pi
 
 ## Support claims
 
-The source currently contains 44 effective internal Banana Pi model IDs and 219 detection names. These numbers describe code coverage, not complete hardware validation. A board can import, detect and map pins while pull control, edge behavior, PWM or exact device permissions remain limited.
+The source currently contains 45 effective internal Banana Pi model IDs and 223 detection names. These numbers describe code coverage, not complete hardware validation. A board can import, detect and map pins while pull control, edge behavior, PWM or exact device permissions remain limited.
 
 The public Banana Pi catalog also contains products that are not appropriate `RPi.GPIO` targets. Modules without an exact carrier, MCU boards, camera products, isolated industrial DI/DO and boards without an intended user GPIO connector are recorded separately instead of receiving guessed mappings.
 
