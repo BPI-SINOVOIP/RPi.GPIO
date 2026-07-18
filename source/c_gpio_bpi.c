@@ -104,7 +104,8 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_R4PRO      107
 #define BPI_MODEL_F4         108
 #define BPI_MODEL_SM10       109
-#define BPI_MODELS_MAX       110
+#define BPI_MODEL_K230D_ZERO 110
+#define BPI_MODELS_MAX       111
 
 #define BPI_MAKER_SINOVOIP    6
 
@@ -323,6 +324,23 @@ static volatile uint32_t *gpio_map;
 #define SP7350_R32_ROF(r)			(((r) >> 5) << 2)
 #define SP7350_R32_BOF(r)			((r) & 0x1f)
 
+#define K230_GPIO_BANKS			2
+#define K230_GPIO_PIN_BASE			0
+#define K230_GPIO_PIN_END			63
+#define K230_GPIO_MAP_SIZE			0x1000
+#define K230_GPIO0_BASE			0x9140B000
+#define K230_GPIO1_BASE			0x9140C000
+#define K230_IOMUX_BASE			0x91105000
+#define K230_SWPORT_DR			0x00
+#define K230_SWPORT_DDR			0x04
+#define K230_EXT_PORT			0x50
+#define K230_IOMUX_SEL_SHIFT			11
+#define K230_IOMUX_SEL_MASK			(0x7u << K230_IOMUX_SEL_SHIFT)
+#define K230_IOMUX_IE			(1u << 8)
+#define K230_IOMUX_OE			(1u << 7)
+#define K230_IOMUX_PU			(1u << 6)
+#define K230_IOMUX_PD			(1u << 5)
+
 struct realtek_gpio_group {
     int pin_base;
     int pin_end;
@@ -442,6 +460,7 @@ int bpi_found_realtek = 0;
 int bpi_found_vs680 = 0;
 int bpi_found_sp7021 = 0;
 int bpi_found_sp7350 = 0;
+int bpi_found_k230 = 0;
 
 const int *pinToGpio_BP ;
 const int *physToGpio_BP ;
@@ -465,6 +484,12 @@ static volatile uint32_t *sp7021_gpio_base2 = NULL;
 static volatile uint32_t *sp7350_gpio_page = NULL;
 static volatile uint32_t *sp7350_gpio_first = NULL;
 static volatile uint32_t *sp7350_gpio_gpioxt = NULL;
+static volatile uint32_t *k230_gpio_map[K230_GPIO_BANKS] = { NULL };
+static volatile uint32_t *k230_iomux_map = NULL;
+static const off_t k230_gpio_base[K230_GPIO_BANKS] = {
+    K230_GPIO0_BASE,
+    K230_GPIO1_BASE,
+};
 static const off_t rockchip_gpio_base_rk3308[ROCKCHIP_GPIO_BANKS] = {
   0xff220000,
   0xff230000,
@@ -625,6 +650,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_R4PRO]   = "Banana Pi R4 Pro[MT7988]",
   [BPI_MODEL_F4]      = "Banana Pi F4[Sunplus SP7350]",
   [BPI_MODEL_SM10]    = "Banana Pi SM10[SpacemiT K3]",
+  [BPI_MODEL_K230D_ZERO] = "Banana Pi CanMV-K230D-Zero[Kendryte K230D]",
 } ;
 
 char *piRevisionNames [16] =
@@ -906,6 +932,10 @@ struct BPIBoards bpiboard [] =
   { "bananapism10",   14201, BPI_MODEL_SM10, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_SM10, physToGpio_BPI_SM10, pinTobcm_BPI_SM10 	},
   { "bananapi-sm10",  14201, BPI_MODEL_SM10, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_SM10, physToGpio_BPI_SM10, pinTobcm_BPI_SM10 	},
   { "banana-pi-sm10", 14201, BPI_MODEL_SM10, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_SM10, physToGpio_BPI_SM10, pinTobcm_BPI_SM10 	},
+  { "bpi-canmv-k230d-zero",       14301, BPI_MODEL_K230D_ZERO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_K230D_ZERO, physToGpio_BPI_K230D_ZERO, pinTobcm_BPI_K230D_ZERO 	},
+  { "bpi-k230d-zero",             14301, BPI_MODEL_K230D_ZERO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_K230D_ZERO, physToGpio_BPI_K230D_ZERO, pinTobcm_BPI_K230D_ZERO 	},
+  { "bananapi-canmv-k230d-zero",  14301, BPI_MODEL_K230D_ZERO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_K230D_ZERO, physToGpio_BPI_K230D_ZERO, pinTobcm_BPI_K230D_ZERO 	},
+  { "banana-pi-canmv-k230d-zero", 14301, BPI_MODEL_K230D_ZERO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_K230D_ZERO, physToGpio_BPI_K230D_ZERO, pinTobcm_BPI_K230D_ZERO 	},
   { "bpi-r4",      13601, BPI_MODEL_R4, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4, physToGpio_BPI_R4, pinTobcm_BPI_R4 	},
   { "bananapir4",  13601, BPI_MODEL_R4, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4, physToGpio_BPI_R4, pinTobcm_BPI_R4 	},
   { "bananapi-r4", 13601, BPI_MODEL_R4, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4, physToGpio_BPI_R4, pinTobcm_BPI_R4 	},
@@ -1228,6 +1258,15 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "spacemit,k3-com260") ||
       strstr(hardware, "k3_com260"))
     return bpi_find_board_by_name("bpi-sm10");
+
+  if (strstr(hardware, "Banana Pi CanMV K230D Zero") ||
+      strstr(hardware, "BananaPi CanMV K230D Zero") ||
+      strstr(hardware, "Banana Pi BPI-CanMV-K230D Zero") ||
+      strstr(hardware, "BananaPi BPI-CanMV-K230D Zero") ||
+      strstr(hardware, "BPI-CanMV-K230D-Zero") ||
+      strstr(hardware, "BPI-CanMV-K230D Zero") ||
+      strstr(hardware, "bananapi-canmv-k230d-zero"))
+    return bpi_find_board_by_name("bpi-canmv-k230d-zero");
 
   if (strstr(hardware, "Banana Pi BPI-M1 Super") ||
       strstr(hardware, "BananaPi BPI-M1 Super") ||
@@ -3349,6 +3388,175 @@ int sp7350_setup(void)
     return SETUP_OK;
 }
 
+static int k230_gpio_mapped(void)
+{
+    return k230_gpio_map[0] != NULL && k230_gpio_map[1] != NULL &&
+           k230_iomux_map != NULL;
+}
+
+static int k230_is_pin(int pin)
+{
+    return pin >= K230_GPIO_PIN_BASE && pin <= K230_GPIO_PIN_END;
+}
+
+static volatile uint32_t *k230_gpio_regs(int pin)
+{
+    return k230_is_pin(pin) ? k230_gpio_map[pin >> 5] : NULL;
+}
+
+static unsigned int k230_pin_shift(int pin)
+{
+    return (unsigned int)pin & 0x1f;
+}
+
+static void k230_update_reg(volatile uint32_t *base, unsigned int offset,
+                            uint32_t clear, uint32_t set)
+{
+    volatile uint32_t *reg;
+    uint32_t value;
+
+    if (!k230_gpio_mapped() || base == NULL)
+        return;
+
+    reg = base + (offset >> 2);
+    value = *reg;
+    value &= ~clear;
+    value |= set;
+    *reg = value;
+}
+
+static void k230_set_gpio_mode(int pin, int direction)
+{
+    volatile uint32_t *gpio_regs = k230_gpio_regs(pin);
+    uint32_t bit;
+
+    if (!k230_is_pin(pin) || !k230_gpio_mapped())
+        return;
+
+    bit = 1u << k230_pin_shift(pin);
+    if (direction == INPUT) {
+        k230_update_reg(k230_iomux_map, (unsigned int)pin << 2,
+                        K230_IOMUX_SEL_MASK | K230_IOMUX_OE,
+                        K230_IOMUX_IE);
+        k230_update_reg(gpio_regs, K230_SWPORT_DDR, bit, 0);
+    } else if (direction == OUTPUT) {
+        k230_update_reg(k230_iomux_map, (unsigned int)pin << 2,
+                        K230_IOMUX_SEL_MASK,
+                        K230_IOMUX_IE | K230_IOMUX_OE);
+        k230_update_reg(gpio_regs, K230_SWPORT_DDR, 0, bit);
+    }
+}
+
+void k230_set_pullupdn(int pin, int pud)
+{
+    uint32_t set = 0;
+
+    if (!k230_is_pin(pin) || !k230_gpio_mapped())
+        return;
+
+    if (pud == PUD_UP)
+        set = K230_IOMUX_PU;
+    else if (pud == PUD_DOWN)
+        set = K230_IOMUX_PD;
+
+    k230_update_reg(k230_iomux_map, (unsigned int)pin << 2,
+                    K230_IOMUX_PU | K230_IOMUX_PD, set);
+}
+
+void k230_setup_gpio(int pin, int direction, int pud)
+{
+    k230_set_pullupdn(pin, pud);
+    k230_set_gpio_mode(pin, direction);
+}
+
+int k230_gpio_function(int pin)
+{
+    volatile uint32_t *gpio_regs = k230_gpio_regs(pin);
+    uint32_t iomux_value;
+    uint32_t alt;
+    uint32_t bit;
+
+    if (!k230_is_pin(pin) || !k230_gpio_mapped())
+        return INPUT;
+
+    iomux_value = k230_iomux_map[pin];
+    alt = (iomux_value & K230_IOMUX_SEL_MASK) >> K230_IOMUX_SEL_SHIFT;
+    if (alt != 0)
+        return (int)alt + 2;
+
+    bit = 1u << k230_pin_shift(pin);
+    return (gpio_regs[K230_SWPORT_DDR >> 2] & bit) ? OUTPUT : INPUT;
+}
+
+void k230_output_gpio(int pin, int value)
+{
+    volatile uint32_t *gpio_regs = k230_gpio_regs(pin);
+    uint32_t bit;
+
+    if (!k230_is_pin(pin) || !k230_gpio_mapped())
+        return;
+
+    bit = 1u << k230_pin_shift(pin);
+    k230_update_reg(gpio_regs, K230_SWPORT_DR,
+                    value == 0 ? bit : 0,
+                    value == 0 ? 0 : bit);
+}
+
+int k230_input_gpio(int pin)
+{
+    volatile uint32_t *gpio_regs = k230_gpio_regs(pin);
+    uint32_t bit;
+
+    if (!k230_is_pin(pin) || !k230_gpio_mapped())
+        return 0;
+
+    bit = 1u << k230_pin_shift(pin);
+    return (gpio_regs[K230_EXT_PORT >> 2] & bit) ? 1 : 0;
+}
+
+int k230_setup(void)
+{
+    int mem_fd;
+    int i;
+
+    if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC)) < 0)
+        return SETUP_DEVMEM_FAIL;
+
+    for (i = 0; i < K230_GPIO_BANKS; ++i) {
+        k230_gpio_map[i] = (uint32_t *)mmap(NULL, K230_GPIO_MAP_SIZE,
+                                            PROT_READ|PROT_WRITE,
+                                            MAP_SHARED, mem_fd,
+                                            k230_gpio_base[i]);
+        if (k230_gpio_map[i] == MAP_FAILED) {
+            int j;
+
+            k230_gpio_map[i] = NULL;
+            for (j = 0; j < i; ++j) {
+                munmap((void *)k230_gpio_map[j], K230_GPIO_MAP_SIZE);
+                k230_gpio_map[j] = NULL;
+            }
+            close(mem_fd);
+            return SETUP_MMAP_FAIL;
+        }
+    }
+
+    k230_iomux_map = (uint32_t *)mmap(NULL, K230_GPIO_MAP_SIZE,
+                                      PROT_READ|PROT_WRITE,
+                                      MAP_SHARED, mem_fd,
+                                      K230_IOMUX_BASE);
+    close(mem_fd);
+    if (k230_iomux_map == MAP_FAILED) {
+        k230_iomux_map = NULL;
+        for (i = 0; i < K230_GPIO_BANKS; ++i) {
+            munmap((void *)k230_gpio_map[i], K230_GPIO_MAP_SIZE);
+            k230_gpio_map[i] = NULL;
+        }
+        return SETUP_MMAP_FAIL;
+    }
+
+    return SETUP_OK;
+}
+
 
 uint32_t sunxi_readl(volatile uint32_t *addr)
 {
@@ -3571,6 +3779,22 @@ void bpi_cleanup(void)
         return;
     }
 
+    if (bpi_found_k230 == 1) {
+        int i;
+
+        for (i = 0; i < K230_GPIO_BANKS; ++i) {
+            if (k230_gpio_map[i] != NULL) {
+                munmap((void *)k230_gpio_map[i], K230_GPIO_MAP_SIZE);
+                k230_gpio_map[i] = NULL;
+            }
+        }
+        if (k230_iomux_map != NULL) {
+            munmap((void *)k230_iomux_map, K230_GPIO_MAP_SIZE);
+            k230_iomux_map = NULL;
+        }
+        return;
+    }
+
     if (bpi_found_renesas == 1) {
         if (renesas_gpio_map != NULL) {
             munmap((void *)renesas_gpio_map, RENESAS_GPIO_MAP_SIZE);
@@ -3676,6 +3900,7 @@ int bpi_piGpioLayout (void)
   bpi_found_vs680 = 0;
   bpi_found_sp7021 = 0;
   bpi_found_sp7350 = 0;
+  bpi_found_k230 = 0;
   if ((bpiFd = fopen("/var/lib/bananapi/board.sh", "r")) != NULL) {
     while(fgets(buffer, sizeof(buffer), bpiFd) != NULL) {
       if (sscanf(buffer, "BOARD=%1023s", hardware) != 1)
@@ -3752,6 +3977,7 @@ int bpi_get_rpi_info(rpi_info *info)
     bpi_found_vs680 = bpi_model_is_vs680(board->model);
     bpi_found_sp7021 = bpi_model_is_sp7021(board->model);
     bpi_found_sp7350 = (board->model == BPI_MODEL_F4);
+    bpi_found_k230 = (board->model == BPI_MODEL_K230D_ZERO);
     sprintf(manufacturer, "%s", piMakerNames [board->maker]);
     info->p1_revision = 3;
     info->type = type;
@@ -3798,6 +4024,8 @@ int bpi_get_rpi_info(rpi_info *info)
 	info->processor = "Sunplus SP7021";
     }else if (bpi_found_sp7350 == 1) {
 	info->processor = "Sunplus SP7350";
+    }else if (bpi_found_k230 == 1) {
+	info->processor = "Kendryte K230D";
     }else if (bpi_found_sun50iw9 == 1) {
 	info->processor = "AW SUN50IW9";
     }else{

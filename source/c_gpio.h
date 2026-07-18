@@ -110,6 +110,12 @@ int sp7350_gpio_function(int gpio);
 void sp7350_output_gpio(int gpio, int value);
 int sp7350_input_gpio(int gpio);
 void sp7350_set_pullupdn(int gpio, int pud);
+int k230_setup(void);
+void k230_setup_gpio(int gpio, int direction, int pud);
+int k230_gpio_function(int gpio);
+void k230_output_gpio(int gpio, int value);
+int k230_input_gpio(int gpio);
+void k230_set_pullupdn(int gpio, int pud);
 void bpi_cleanup(void);
 #endif
 

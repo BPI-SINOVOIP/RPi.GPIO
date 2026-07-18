@@ -800,6 +800,7 @@ const int physToGpio_BP [64] =
 #include "bpi-f2s-f2p.h"
 #include "bpi-f4.h"
 #include "bpi-sm10.h"
+#include "bpi-canmv-k230d-zero.h"
 #include "bpi-r4.h"
 #include "bpi-r3.h"
 #include "bpi-r64.h"
