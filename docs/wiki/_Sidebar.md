@@ -5,6 +5,7 @@
 - [Quick Start](Quick-Start)
 - [Board Support Matrix](Board-Support-Matrix)
 - [OpenWrt One GPIO](OpenWrt-One)
+- [K3 Pico-ITX GPIO](K3-Pico-ITX)
 - [Numbering and Detection](Numbering-and-Detection)
 - [Porting a New Board](Porting-a-New-Board)
 - [Hardware Validation](Hardware-Validation)

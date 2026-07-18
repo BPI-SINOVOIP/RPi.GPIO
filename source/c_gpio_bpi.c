@@ -106,7 +106,8 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_SM10       109
 #define BPI_MODEL_K230D_ZERO 110
 #define BPI_MODEL_OPENWRT_ONE 111
-#define BPI_MODELS_MAX       112
+#define BPI_MODEL_K3_PICO_ITX 112
+#define BPI_MODELS_MAX       113
 
 #define BPI_MAKER_SINOVOIP    6
 
@@ -655,6 +656,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_SM10]    = "Banana Pi SM10[SpacemiT K3]",
   [BPI_MODEL_K230D_ZERO] = "Banana Pi CanMV-K230D-Zero[Kendryte K230D]",
   [BPI_MODEL_OPENWRT_ONE] = "OpenWrt One[MT7981B]",
+  [BPI_MODEL_K3_PICO_ITX] = "K3 Pico-ITX[SpacemiT K3]",
 } ;
 
 char *piRevisionNames [16] =
@@ -943,6 +945,10 @@ struct BPIBoards bpiboard [] =
   { "openwrt-one", 14401, BPI_MODEL_OPENWRT_ONE, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_OPENWRT_ONE, physToGpio_OPENWRT_ONE, pinTobcm_OPENWRT_ONE 	},
   { "openwrt,one", 14401, BPI_MODEL_OPENWRT_ONE, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_OPENWRT_ONE, physToGpio_OPENWRT_ONE, pinTobcm_OPENWRT_ONE 	},
   { "ap-24.xy",   14401, BPI_MODEL_OPENWRT_ONE, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_OPENWRT_ONE, physToGpio_OPENWRT_ONE, pinTobcm_OPENWRT_ONE 	},
+  { "k3-pico-itx",          14501, BPI_MODEL_K3_PICO_ITX, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_K3_PICO_ITX, physToGpio_K3_PICO_ITX, pinTobcm_K3_PICO_ITX 	},
+  { "spacemit-k3-pico-itx", 14501, BPI_MODEL_K3_PICO_ITX, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_K3_PICO_ITX, physToGpio_K3_PICO_ITX, pinTobcm_K3_PICO_ITX 	},
+  { "spacemit,k3-pico-itx", 14501, BPI_MODEL_K3_PICO_ITX, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_K3_PICO_ITX, physToGpio_K3_PICO_ITX, pinTobcm_K3_PICO_ITX 	},
+  { "spacemit-k3-pico",     14501, BPI_MODEL_K3_PICO_ITX, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_K3_PICO_ITX, physToGpio_K3_PICO_ITX, pinTobcm_K3_PICO_ITX 	},
   { "bpi-r4",      13601, BPI_MODEL_R4, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4, physToGpio_BPI_R4, pinTobcm_BPI_R4 	},
   { "bananapir4",  13601, BPI_MODEL_R4, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4, physToGpio_BPI_R4, pinTobcm_BPI_R4 	},
   { "bananapi-r4", 13601, BPI_MODEL_R4, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4, physToGpio_BPI_R4, pinTobcm_BPI_R4 	},
@@ -1274,6 +1280,13 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "BPI-CanMV-K230D Zero") ||
       strstr(hardware, "bananapi-canmv-k230d-zero"))
     return bpi_find_board_by_name("bpi-canmv-k230d-zero");
+
+  if (strstr(hardware, "SpacemiT K3 Pico ITX") ||
+      strstr(hardware, "Spacemit K3 Pico ITX") ||
+      strstr(hardware, "spacemit k3 pico itx") ||
+      strstr(hardware, "spacemit,k3-pico-itx") ||
+      strstr(hardware, "k3-pico-itx"))
+    return bpi_find_board_by_name("k3-pico-itx");
 
   if (strstr(hardware, "OpenWrt One") ||
       strstr(hardware, "OpenWRT One") ||
@@ -3990,8 +4003,10 @@ int bpi_get_rpi_info(rpi_info *info)
                        board->model == BPI_MODEL_M2PRO);
     bpi_found_spacemit = (board->model == BPI_MODEL_F3 ||
                            board->model == BPI_MODEL_CM6 ||
-                           board->model == BPI_MODEL_SM10);
-    spacemit_is_k3 = (board->model == BPI_MODEL_SM10);
+                           board->model == BPI_MODEL_SM10 ||
+                           board->model == BPI_MODEL_K3_PICO_ITX);
+    spacemit_is_k3 = (board->model == BPI_MODEL_SM10 ||
+                      board->model == BPI_MODEL_K3_PICO_ITX);
     bpi_found_renesas = (board->model == BPI_MODEL_AI2N);
     bpi_found_rockchip = bpi_model_is_rockchip(board->model);
     if (bpi_found_rockchip == 1)

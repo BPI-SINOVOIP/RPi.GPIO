@@ -161,8 +161,9 @@ The supported IO surface is:
 | BPI-R4 Lite | done | Added MT7987 GPIO v2 support by reusing the MTK v2 mmap backend (`pio@1001f000`) and the Armbian 6.17 `mt7987a-bananapi-bpi-r4-lite-mikrobus.dtsi` map. BOARD mode follows the 2x8 MikroBUS physical pins 1-16; GPIO-capable pins are 5/6/7/8/10/11/12/13/14 only. Pull control remains no-op pending hardware validation. |
 | BPI-R4 Pro | done | Added MT7988 GPIO v2 support using the Armbian 6.17 `mt7988a-bananapi-bpi-r4-pro.dtsi` 26-pin map. The physical header matches the existing R4 map, but R4 Pro has its own board aliases/header so later 4e/8x differences can be adjusted independently. Detection now checks `/proc/device-tree/compatible` before the model string because the 4e/8x DTS model string is still generic `Bananapi BPI-R4`. Pull control remains no-op pending hardware validation. |
 | BPI-R2 Mini | not-applicable | Existing applicability audit records no Raspberry-Pi-style GPIO library map. Reopen only if an intended external raw-GPIO connector is documented. |
-| BPI-R4 Mini | blocked | Public product data still lacks an exact external connector map, schematic, BSP/OpenWrt profile and runtime evidence. |
+| BPI-R4 Mini | not-applicable | The official product specification lists Ethernet, M.2, USB, buttons and LEDs but no intended external raw-GPIO connector. Do not alias R4 Lite; reopen only if a future hardware revision publishes a user GPIO connector. |
 | OpenWrt One | limited | Added exact `OpenWrt One` / `openwrt,one` detection, a CN7 mikroBUS map from the official KiCad schematic, and MT7981 selection in the MTK v2 register backend. The exact OpenWrt DTS uses GPIO base `0x11d00000`; upstream pinctrl data closes CN7 GPIO-capable pins 3-8 and 10-14 to native lines `7,6,4,5,10,12,2,25,22,24,23`. `GPIO.BOARD` is CN7 pin 1-16; `GPIO.BCM` uses native MT7981 line numbers. AN/pin 9 is intentionally non-GPIO. The native extension builds; pull, edge/PWM, device nodes, permissions and hardware behavior remain unverified. |
+| K3 Pico-ITX | limited | Added exact `SpacemiT K3 Pico ITX` / `spacemit,k3-pico-itx` detection and eight 3.3 V application-CPU GPIOs on `GPIO.BOARD` positions 9-16: native K3 pads / `GPIO.BCM` channels `21,22,28,29,31,32,33,34`. Reuses the source-backed SM10 K3 register backend. RT24-owned 26-pin signals and the complete 1.8 V 36-pin connector deliberately remain unavailable. The native extension builds; FPC orientation, permissions, pull/edge/PWM and real hardware remain unverified. |
 | BPI-WiFi5 / WiFi6 / RT2 / RV2 | deferred | Reviewed local Armbian board matrix/docs on 2026-06-02: WiFi6 is Triductor/OpenWrt BSP only, RT2 is Realtek OpenWrt UBI flow, and WiFi5/RV2 are Siflower OpenWrt/FIT/web-upgrade flows with no local Armbian board family. No stable raw-image board target or external GPIO header policy exists for RPi.GPIO. |
 | BPI-F4 | limited | Added SP7350 direct-register GPIO support from the official Sunplus kernel driver (`FIRST`, `MASTER`, output-enable, output and input registers), four board aliases, and a 20-line terminal-table map. `GPIO.BOARD` means official terminal-table row 1-29 because F4 uses several terminal blocks. The native extension builds locally. Pull control is intentionally a no-op; exact production DTS identity and hardware GPIO behavior remain unverified. |
 | BPI-F2 / F5 / S64 / Secure-Pi / SM9 / AI2H / Loongson boards | blocked | Reviewed local Armbian priority docs on 2026-06-02: F2 lacks exact i.MX6 BPI board files; F5 has no BPI-F5 T527 DTS/defconfig; S64 lacks Actions S700 Armbian/U-Boot targets; Secure-Pi has example repos but no Linux/U-Boot BSP; SM9 needs BM1688 SDK/boot-chain integration; AI2H has Renesas EVK files but no Banana Pi carrier DTS/DDR/board hook; Loongson boards need exact embedded U-Boot/BIOS/DTS/image policy beyond generic `uefi-loong64`. Do not add GPIO aliases until exact board files and header maps exist. |
@@ -177,20 +178,21 @@ This section supersedes stale discovery statements in the 2026-06-01 batches.
 | BPI-CanMV-K230D Zero | `limited` | Two-bank K230D GPIO/IOMUX backend, exact detection and 27-line JP1 map now build locally. Obtain exact production image identity, gpioinfo and hardware digital-I/O/pull/edge/PWM logs before widening the claim. |
 | BPI-SM10 | `limited` | K3 register variant, exact detection and 27-line J12 map now build locally. Obtain exact production image identity, gpioinfo and hardware digital-I/O/pull logs before widening the claim. |
 | OpenWrt One | `limited` | Exact DTS identity, official KiCad CN7 routing, MT7981 pinctrl mapping and the `0x11d00000` GPIO base now back an 11-line mikroBUS map. Obtain an exact production image, gpioinfo, device-permission evidence and safe CN7 digital-I/O logs. |
+| K3 Pico-ITX | `limited` | Exact DTS identity, official connector tables/schematic and K3 pinctrl/GPIO sources now back an eight-line, 3.3 V application-CPU subset on BOARD pins 9-16. Obtain exact production image identity, gpioinfo, FPC breakout/orientation confirmation and safe digital-I/O logs; keep RT24 and the 1.8 V 36-pin connector excluded. |
 | BPI-CM5 + CM4IO | `blocked` | CM4IO claims CM5 compatibility, but the published table is CM4/A311D context; require CM5/A311D2-specific carrier/DTS/gpioinfo evidence. |
 | BPI-Secure-Pi / BPI-SM9 | `blocked` | Official 40-pin tables exist. A 2026-07-19 recheck found only SP2302 application/demo repositories in the linked SecurePi account, while the SM9 Getting Started page publishes pin names and examples but no exact board BSP/DTS. Exact gpiochip mapping, controller backend and runtime logs remain missing. |
-| RK3588 Stamp-hole / Gold-finger | `blocked` | Require an exact carrier product/revision, or mark the standalone module not applicable. |
+| RK3588 Stamp-hole / Gold-finger | `not-applicable` | The published standalone products expose proprietary module connectors rather than a fixed raw user header. Evaluate any future exact carrier as a separate target. |
 | BPI-LM7 + W3 | `base-covered` | Reuse W3 carrier; collect only detection identity and hardware evidence for the exact combination. |
-| BPI-R2 Mini / BPI-R3 Mini | `not-applicable` | Do not create Pi-style library targets unless product policy introduces an intended raw GPIO connector. |
-| K3 Pico-ITX / BPI-5202 / BPI-2K3000 | `scope-review` | Resolve FPC/RT24, module-bus, or isolated-IO policy before any library promise. |
+| BPI-R2 Mini / BPI-R3 Mini / BPI-R4 Mini | `not-applicable` | Do not create Pi-style library targets unless product policy introduces an intended raw GPIO connector. |
+| BPI-5202 / BPI-2K3000 | `scope-review` | Resolve module-bus or isolated-IO policy before any library promise. |
 | Other blocked/deferred boards | published matrix | Follow the board decision in the Wiki support matrix and collect the evidence required by the Wiki hardware-validation contract. |
 
 ## Current Next Item
 
 The old “No remaining planned `todo` items” conclusion is retired. BPI-SM10,
-BPI-CanMV-K230D Zero and OpenWrt One have joined BPI-F4 in hardware-validation
-work with an explicit `limited` status. Boards without exact evidence remain
-blocked by the Wiki evidence contract.
+BPI-CanMV-K230D Zero, OpenWrt One and K3 Pico-ITX have joined BPI-F4 in
+hardware-validation work with an explicit `limited` status. Boards without
+exact evidence remain blocked by the Wiki evidence contract.
 
 Resume sequence:
 

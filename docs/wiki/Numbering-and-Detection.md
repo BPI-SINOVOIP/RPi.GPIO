@@ -15,6 +15,8 @@ BPI-SM10 uses the carrier's J12 40-pin header. Its map is traced through the lev
 
 OpenWrt One uses the standard 16-pin CN7 mikroBUS numbering in `GPIO.BOARD` mode. GPIO-capable pins are 3-8 and 10-14; pin 9 is the analog `AN` input and is not exposed by the digital mmap backend. `GPIO.BCM` channels are the native MT7981 lines `2,4,5,6,7,10,12,22,23,24,25`, matching the exact DTS, official KiCad nets and upstream pinctrl data.
 
+K3 Pico-ITX `GPIO.BOARD` mode refers only to the official 26-pin, 3.3 V FPC connector. The supported pins are BOARD 9-16 and `GPIO.BCM` channels are the native K3 pads `21,22,28,29,31,32,33,34`. RT24-owned positions and the entire 1.8 V 36-pin FPC have no library numbering and must not be inferred.
+
 ## Board detection
 
 Detection aliases and Banana Pi model selection are maintained in `source/c_gpio_bpi.c`. Board-specific maps are included through `source/bpi_gpio.h` and the relevant `source/bpi-*.h` headers.
@@ -36,6 +38,7 @@ Examples:
 
 - LM7 uses W3 as its documented development kit.
 - CM4, CM5, CM5 Pro, CM6, AIM7 and AI2N support claims must name the exact IO board/carrier.
+- RK3588 Stamp-hole and Gold-finger core modules do not define a user-header map; a future carrier must be a separate exact target.
 
 ## Detection bug report data
 

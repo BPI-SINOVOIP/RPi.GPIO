@@ -6,6 +6,7 @@ This repository adapts the familiar `RPi.GPIO` Python API to supported Banana Pi
 
 - New user: [Build and Install](Build-and-Install) → [Quick Start](Quick-Start)
 - Check a board: [Board Support Matrix](Board-Support-Matrix)
+- K3 Pico-ITX safe FPC subset: [K3 Pico-ITX GPIO](K3-Pico-ITX)
 - Understand `BOARD` and `BCM`: [Numbering and Detection](Numbering-and-Detection)
 - Add a board: [Porting a New Board](Porting-a-New-Board)
 - Validate hardware: [Hardware Validation](Hardware-Validation)
@@ -14,7 +15,7 @@ This repository adapts the familiar `RPi.GPIO` Python API to supported Banana Pi
 
 ## Support claims
 
-The source currently contains 48 effective internal Banana Pi model IDs and 234 detection names. These numbers describe code coverage, not complete hardware validation. A board can import, detect and map pins while pull control, edge behavior, PWM or exact device permissions remain limited.
+The source currently contains 49 effective internal Banana Pi model IDs and 238 detection names. These numbers describe code coverage, not complete hardware validation. A board can import, detect and map pins while pull control, edge behavior, PWM or exact device permissions remain limited.
 
 The public Banana Pi catalog also contains products that are not appropriate `RPi.GPIO` targets. Modules without an exact carrier, MCU boards, camera products, isolated industrial DI/DO and boards without an intended user GPIO connector are recorded separately instead of receiving guessed mappings.
 
