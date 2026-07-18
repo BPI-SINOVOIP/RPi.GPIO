@@ -103,7 +103,8 @@ static volatile uint32_t *gpio_map;
 #define BPI_MODEL_R4LITE     106
 #define BPI_MODEL_R4PRO      107
 #define BPI_MODEL_F4         108
-#define BPI_MODELS_MAX       109
+#define BPI_MODEL_SM10       109
+#define BPI_MODELS_MAX       110
 
 #define BPI_MAKER_SINOVOIP    6
 
@@ -200,6 +201,7 @@ static volatile uint32_t *gpio_map;
 
 #define SPACEMIT_BANK012_OFFSET(x)		((x) << 2)
 #define SPACEMIT_BANK3_OFFSET			0x100
+#define SPACEMIT_K3_BANK_OFFSET(x)		((x) == 3 ? 0x100 : ((x) << 6))
 
 #define SPACEMIT_GPLR				0x0
 #define SPACEMIT_GPDR				0xC
@@ -207,6 +209,12 @@ static volatile uint32_t *gpio_map;
 #define SPACEMIT_GPCR				0x24
 #define SPACEMIT_GSDR				0x54
 #define SPACEMIT_GCDR				0x60
+
+#define SPACEMIT_K3_GPDR			0x04
+#define SPACEMIT_K3_GPSR			0x08
+#define SPACEMIT_K3_GPCR			0x0C
+#define SPACEMIT_K3_GSDR			0x1C
+#define SPACEMIT_K3_GCDR			0x20
 
 #define SPACEMIT_AF_SEL_OFFSET			0
 #define SPACEMIT_AF_SEL_MASK			(7 << 0)
@@ -427,6 +435,7 @@ int bpi_found_mtk_mt7622 = 0;
 int bpi_found_sun50iw9 = 0;
 int bpi_found_meson = 0;
 int bpi_found_spacemit = 0;
+static int spacemit_is_k3 = 0;
 int bpi_found_renesas = 0;
 int bpi_found_rockchip = 0;
 int bpi_found_realtek = 0;
@@ -615,6 +624,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_R4LITE]  = "Banana Pi R4 Lite[MT7987]",
   [BPI_MODEL_R4PRO]   = "Banana Pi R4 Pro[MT7988]",
   [BPI_MODEL_F4]      = "Banana Pi F4[Sunplus SP7350]",
+  [BPI_MODEL_SM10]    = "Banana Pi SM10[SpacemiT K3]",
 } ;
 
 char *piRevisionNames [16] =
@@ -892,6 +902,10 @@ struct BPIBoards bpiboard [] =
   { "bananapif4",  14101, BPI_MODEL_F4, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_F4, physToGpio_BPI_F4, pinTobcm_BPI_F4 	},
   { "bananapi-f4", 14101, BPI_MODEL_F4, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_F4, physToGpio_BPI_F4, pinTobcm_BPI_F4 	},
   { "banana-pi-f4", 14101, BPI_MODEL_F4, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_F4, physToGpio_BPI_F4, pinTobcm_BPI_F4 	},
+  { "bpi-sm10",       14201, BPI_MODEL_SM10, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_SM10, physToGpio_BPI_SM10, pinTobcm_BPI_SM10 	},
+  { "bananapism10",   14201, BPI_MODEL_SM10, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_SM10, physToGpio_BPI_SM10, pinTobcm_BPI_SM10 	},
+  { "bananapi-sm10",  14201, BPI_MODEL_SM10, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_SM10, physToGpio_BPI_SM10, pinTobcm_BPI_SM10 	},
+  { "banana-pi-sm10", 14201, BPI_MODEL_SM10, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_SM10, physToGpio_BPI_SM10, pinTobcm_BPI_SM10 	},
   { "bpi-r4",      13601, BPI_MODEL_R4, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4, physToGpio_BPI_R4, pinTobcm_BPI_R4 	},
   { "bananapir4",  13601, BPI_MODEL_R4, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4, physToGpio_BPI_R4, pinTobcm_BPI_R4 	},
   { "bananapi-r4", 13601, BPI_MODEL_R4, 1, 4, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R4, physToGpio_BPI_R4, pinTobcm_BPI_R4 	},
@@ -1204,6 +1218,16 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "bananapi,bpi-f4") ||
       strstr(hardware, "sp7350-bpi-f4"))
     return bpi_find_board_by_name("bpi-f4");
+
+  if (strstr(hardware, "Banana Pi BPI-SM10") ||
+      strstr(hardware, "BananaPi BPI-SM10") ||
+      strstr(hardware, "Banana Pi SM10") ||
+      strstr(hardware, "BananaPi SM10") ||
+      strstr(hardware, "BPI-SM10") ||
+      strstr(hardware, "SpacemiT K3 Com260") ||
+      strstr(hardware, "spacemit,k3-com260") ||
+      strstr(hardware, "k3_com260"))
+    return bpi_find_board_by_name("bpi-sm10");
 
   if (strstr(hardware, "Banana Pi BPI-M1 Super") ||
       strstr(hardware, "BananaPi BPI-M1 Super") ||
@@ -2161,6 +2185,8 @@ static int spacemit_mfpr_offset(int pin)
 {
     if (pin < SPACEMIT_GPIO_PIN_BASE || pin > SPACEMIT_GPIO_PIN_END)
         return -1;
+    if (spacemit_is_k3)
+        return pin << 2;
     if (pin <= 85)
         return (pin + 1) << 2;
     if (pin <= 92)
@@ -2171,6 +2197,8 @@ static int spacemit_mfpr_offset(int pin)
 
 static int spacemit_gpio_alt(int pin)
 {
+    if (spacemit_is_k3)
+        return 0;
     if ((pin >= 70 && pin <= 73) || (pin >= 93 && pin <= 103))
         return 1;
     if (pin >= 104 && pin <= 109)
@@ -2183,7 +2211,34 @@ static int spacemit_bank_offset(int pin)
 {
     int bank = pin >> 5;
 
+    if (spacemit_is_k3)
+        return SPACEMIT_K3_BANK_OFFSET(bank);
     return bank == 3 ? SPACEMIT_BANK3_OFFSET : SPACEMIT_BANK012_OFFSET(bank);
+}
+
+static int spacemit_gpdr_offset(void)
+{
+    return spacemit_is_k3 ? SPACEMIT_K3_GPDR : SPACEMIT_GPDR;
+}
+
+static int spacemit_gpsr_offset(void)
+{
+    return spacemit_is_k3 ? SPACEMIT_K3_GPSR : SPACEMIT_GPSR;
+}
+
+static int spacemit_gpcr_offset(void)
+{
+    return spacemit_is_k3 ? SPACEMIT_K3_GPCR : SPACEMIT_GPCR;
+}
+
+static int spacemit_gsdr_offset(void)
+{
+    return spacemit_is_k3 ? SPACEMIT_K3_GSDR : SPACEMIT_GSDR;
+}
+
+static int spacemit_gcdr_offset(void)
+{
+    return spacemit_is_k3 ? SPACEMIT_K3_GCDR : SPACEMIT_GCDR;
 }
 
 static int spacemit_pin_shift(int pin)
@@ -2220,9 +2275,9 @@ static void spacemit_set_gpio_mode(int pin, int direction)
                         (uint32_t)spacemit_gpio_alt(pin) << SPACEMIT_AF_SEL_OFFSET);
 
     if (direction == INPUT)
-        dir_offset = bank + SPACEMIT_GCDR;
+        dir_offset = bank + spacemit_gcdr_offset();
     else if (direction == OUTPUT)
-        dir_offset = bank + SPACEMIT_GSDR;
+        dir_offset = bank + spacemit_gsdr_offset();
     else
         return;
 
@@ -2243,7 +2298,7 @@ int spacemit_gpio_function(int pin)
     if (af_sel != (uint32_t)spacemit_gpio_alt(pin))
         return (int)af_sel + 2;
 
-    return (*(spacemit_gpio_map + ((bank + SPACEMIT_GPDR) >> 2)) & (1u << shift)) ? OUTPUT : INPUT;
+    return (*(spacemit_gpio_map + ((bank + spacemit_gpdr_offset()) >> 2)) & (1u << shift)) ? OUTPUT : INPUT;
 }
 
 void spacemit_set_pullupdn(int pin, int pud)
@@ -2278,7 +2333,7 @@ void spacemit_output_gpio(int pin, int value)
     if (!spacemit_is_pin(pin) || !spacemit_gpio_mapped())
         return;
 
-    offset = bank + (value == 0 ? SPACEMIT_GPCR : SPACEMIT_GPSR);
+    offset = bank + (value == 0 ? spacemit_gpcr_offset() : spacemit_gpsr_offset());
     spacemit_update_reg(spacemit_gpio_map, offset, 0, 1u << shift);
 }
 
@@ -3614,6 +3669,7 @@ int bpi_piGpioLayout (void)
   bpi_found_sun50iw9 = 0;
   bpi_found_meson = 0;
   bpi_found_spacemit = 0;
+  spacemit_is_k3 = 0;
   bpi_found_renesas = 0;
   bpi_found_rockchip = 0;
   bpi_found_realtek = 0;
@@ -3683,7 +3739,9 @@ int bpi_get_rpi_info(rpi_info *info)
                        board->model == BPI_MODEL_M5 ||
                        board->model == BPI_MODEL_M2PRO);
     bpi_found_spacemit = (board->model == BPI_MODEL_F3 ||
-                           board->model == BPI_MODEL_CM6);
+                           board->model == BPI_MODEL_CM6 ||
+                           board->model == BPI_MODEL_SM10);
+    spacemit_is_k3 = (board->model == BPI_MODEL_SM10);
     bpi_found_renesas = (board->model == BPI_MODEL_AI2N);
     bpi_found_rockchip = bpi_model_is_rockchip(board->model);
     if (bpi_found_rockchip == 1)
@@ -3713,7 +3771,7 @@ int bpi_get_rpi_info(rpi_info *info)
     }else if (bpi_found_meson == 1) {
 	info->processor = "Amlogic Meson";
     }else if (bpi_found_spacemit == 1) {
-	info->processor = "SpacemiT K1";
+	info->processor = spacemit_is_k3 ? "SpacemiT K3" : "SpacemiT K1";
     }else if (bpi_found_renesas == 1) {
 	info->processor = "Renesas RZ/V2N";
     }else if (bpi_found_rockchip == 1) {
