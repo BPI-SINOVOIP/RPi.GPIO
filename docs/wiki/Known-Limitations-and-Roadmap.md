@@ -11,14 +11,14 @@
 
 ## Current roadmap
 
-### Software-startable
+### Newly implemented, hardware validation required
 
-1. BPI-SM10 / SpacemiT K3.
-2. BPI-CanMV-K230D Zero / Canaan K230D.
+- BPI-SM10 / SpacemiT K3: detection, J12 map and K3 GPIO direction/read/write/pull paths build in the native extension; physical pin 18 is deliberately unavailable.
+- BPI-CanMV-K230D Zero / Kendryte K230D: detection, JP1 map, two-bank direction/read/write and IOMUX pull paths build in the native extension; physical pin 16 is deliberately unavailable.
 
 ### Implemented but hardware validation required
 
-BPI-F4 / Sunplus SP7350 has basic direction/read/write support and a terminal-row map. Pull, exact production detection identity and real hardware behavior remain unverified.
+BPI-F4 / Sunplus SP7350 has basic direction/read/write support and a terminal-row map. Pull, exact production detection identity and real hardware behavior remain unverified. SM10 and K230D Zero have stronger public source identity, but still require gpioinfo plus safe input/output/pull tests on exact production images before their capability claims can be widened.
 
 ### Needs exact internal board evidence
 

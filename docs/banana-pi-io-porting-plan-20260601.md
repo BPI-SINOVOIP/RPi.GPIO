@@ -146,7 +146,8 @@ The supported IO surface is:
 | BPI-M6 | Synaptics VS680 | done | Added VS680 DW APB GPIO mmap backend from Armbian/vendor DTS (`gpio0/1/2` and `sm_gpio0`) and the official BPI-M6 CON3 40-pin table. SoC GPIO and SM_GPIO header pins are supported; header pins routed through the FXL6408 I2C expander remain non-GPIO in this mmap backend pending a separate gpiod/sysfs expander path. Local extension build passed. |
 | BPI-F2S / BPI-F2P | Sunplus SP7021 | done | Added SP7021 GPIO mmap backend from Armbian/vendor pinctrl registers (`pctl@0x9C000100`, base0/base1/base2 register banks) and the F2S/F2P 40-pin map from the official schematics. Pull control remains no-op pending Sunplus pinctrl hardware validation. Local extension build passed. |
 | BPI-CM6 | SpacemiT K1 | done | Added CM6-specific 26-pin IO board map from the official CM6 docs; reuses the K1 SpacemiT mmap backend from F3. Physical pin 12 is GPIO44, so CM6 is not aliased to F3. Local extension build passed. |
-| BPI-SM10 | SpacemiT K3 | todo | Official 40-pin table, carrier schematic, local K3 SDK and exact `k3_com260.dts` are now available. Implement only after mapping each exposed signal to K3 `gpiochip`/offset; keep hardware validation open. |
+| BPI-SM10 | SpacemiT K3 | limited | Added four detection names, a 27-line J12 map traced through the official carrier schematic and K3 pinctrl data, and K3-specific bank/register selection in the SpacemiT mmap backend. Physical pin 18 remains non-GPIO because no published connection exists. The native extension builds; exact production image identity, gpioinfo and safe hardware validation remain open. |
+| BPI-CanMV-K230D Zero | Kendryte K230D | limited | Added four exact-board detection names, a 27-line JP1 map from the official Banana Pi table, and a two-bank DW APB GPIO plus IOMUX mmap backend from the official Canaan Linux SDK/kernel evidence. Physical pin 16 remains non-GPIO because the official row has no GPIO number. The native extension builds; exact image, gpioinfo, edge/PWM and safe hardware tests remain open. |
 | BPI-M2C | UniSoC UIS7885 | blocked | Armbian path is PAC/hybrid; userspace GPIO support depends on usable kernel GPIO exposure. |
 
 ### Batch E: routers, app products, and blocked families
@@ -173,8 +174,8 @@ This section supersedes stale discovery statements in the 2026-06-01 batches.
 | Board/group | Current decision | Evidence-driven next action |
 | --- | --- | --- |
 | BPI-F4 | `limited` | SP7350 backend/detection and the official 20-GPIO terminal-row map now exist and the native extension builds locally. Obtain exact production DTS/model/compatible, gpioinfo and hardware logs; validate pull/pad state before widening the claim. |
-| BPI-CanMV-K230D Zero | `todo` | Official 40-pin table, schematic and SDK exist; derive Linux gpiochip/offset and implement board mapping/backend without guessing runtime numbering. |
-| BPI-SM10 | `todo` | Official 40-pin table/schematic and local exact K3 DTS exist; complete signal-to-controller mapping, backend and tests. |
+| BPI-CanMV-K230D Zero | `limited` | Two-bank K230D GPIO/IOMUX backend, exact detection and 27-line JP1 map now build locally. Obtain exact production image identity, gpioinfo and hardware digital-I/O/pull/edge/PWM logs before widening the claim. |
+| BPI-SM10 | `limited` | K3 register variant, exact detection and 27-line J12 map now build locally. Obtain exact production image identity, gpioinfo and hardware digital-I/O/pull logs before widening the claim. |
 | BPI-CM5 + CM4IO | `blocked` | CM4IO claims CM5 compatibility, but the published table is CM4/A311D context; require CM5/A311D2-specific carrier/DTS/gpioinfo evidence. |
 | BPI-Secure-Pi / BPI-SM9 | `blocked` | Official 40-pin tables exist; exact board BSP/DTS/gpiochip mapping and runtime logs remain missing. |
 | RK3588 Stamp-hole / Gold-finger | `blocked` | Require an exact carrier product/revision, or mark the standalone module not applicable. |
@@ -185,10 +186,10 @@ This section supersedes stale discovery statements in the 2026-06-01 batches.
 
 ## Current Next Item
 
-The old “No remaining planned `todo` items” conclusion is retired. The next
-software-startable sequence is BPI-SM10, then BPI-CanMV-K230D Zero. BPI-F4
-has moved to hardware-validation work with an explicit `limited` status;
-boards without exact evidence remain blocked by the Wiki evidence contract.
+The old “No remaining planned `todo` items” conclusion is retired. BPI-SM10
+and BPI-CanMV-K230D Zero have joined BPI-F4 in hardware-validation work with
+an explicit `limited` status. Boards without exact evidence remain blocked by
+the Wiki evidence contract.
 
 Resume sequence:
 

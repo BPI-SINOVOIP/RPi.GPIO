@@ -16,7 +16,7 @@ Status date: 2026-07-18
 | `needs-review` | The product exists but the two GPIO repositories still need an explicit support decision. |
 | `out-of-scope` | `RPi.GPIO` is not the correct interface for the product. |
 
-The normalized Banana Pi catalog has 110 products: 14 `implemented`, 9 `alias`, 19 `limited`, 6 `carrier-only`, 3 `base-covered`, 14 `blocked`, 9 `deferred`, 5 `needs-review` and 31 `out-of-scope`. Customer-private boards are excluded.
+The normalized Banana Pi catalog has 110 products: 14 `implemented`, 9 `alias`, 21 `limited`, 6 `carrier-only`, 3 `base-covered`, 13 `blocked`, 9 `deferred`, 4 `needs-review` and 31 `out-of-scope`. Customer-private boards are excluded.
 
 ## Code-backed families
 
@@ -25,7 +25,8 @@ The repository contains Banana Pi model paths for these major families:
 - Legacy Allwinner: M1/M1 Plus/R1, M2, M2 Plus variants, M2 Ultra/Berry, M2 Magic, M2 Zero/P2 Zero, M3, M64.
 - Newer Allwinner: M4 Berry and M4 Zero.
 - Amlogic: M2S, CM4IO carrier, M5 and M2 Pro.
-- SpacemiT K1: F3 and CM6 IO carrier.
+- SpacemiT: F3/CM6 IO on K1 and SM10/K3-CoM260 on K3.
+- Kendryte/Canaan K230D: BPI-CanMV-K230D Zero.
 - Renesas RZ/V2N: AI2N carrier path.
 - Rockchip: R2 Pro, M5 Pro/CM5 Pro IO, M7, W3, AIM7, M4 Super, M1 Super, Forge1 and P2 Pro.
 - Realtek/Synaptics/Sunplus: W2, M4, M6, F2S, F2P and F4.
@@ -33,14 +34,14 @@ The repository contains Banana Pi model paths for these major families:
 
 This list says a code path exists. Read the per-board row in the [porting plan](https://github.com/BPI-SINOVOIP/RPi.GPIO/blob/bpi-legacy-io-porting/docs/banana-pi-io-porting-plan-20260601.md) for capability and validation limits.
 
-## Current software-startable work
+## Newly code-backed, awaiting hardware validation
 
-1. BPI-SM10 — finish signal-to-controller mapping for the official 40-pin carrier and exact K3 DTS, then implement/test the Python path.
-2. BPI-CanMV-K230D Zero — derive Linux gpiochip/offset from the official 40-pin/SDK evidence and implement without guessing runtime numbering.
+- BPI-SM10 now has four detection names, a 27-line J12 map traced through the official carrier schematic, and a K3 register variant of the SpacemiT backend. Published physical pin 18 remains unavailable. The native extension builds; exact image identity, gpioinfo and safe hardware tests are still required.
+- BPI-CanMV-K230D Zero now has four detection names, a 27-line JP1 map from the official table, and a source-backed K230D two-bank GPIO/IOMUX backend. Physical pin 16 remains unavailable because the official row has no GPIO number. The native extension builds; real board behavior, edge/PWM and device permissions remain unverified.
 
 ## Hardware-validation work
 
-BPI-F4 now has a source-backed SP7350 backend, four detection aliases and a 20-line terminal-table map. It remains `limited`: `GPIO.BOARD` means official terminal-table row 1-29, pull is a no-op, and exact production DTS/gpioinfo/digital-I/O logs are still required.
+BPI-F4, BPI-SM10 and BPI-CanMV-K230D Zero all remain `limited` until named production images and safe real-hardware digital-I/O logs exist. F4 pull is still a no-op; SM10 and K230D pull logic is source-backed but untested; edge and PWM behavior is not claimed as hardware-validated.
 
 ## Still blocked by exact internal evidence
 
