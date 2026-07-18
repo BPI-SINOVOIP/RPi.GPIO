@@ -2300,6 +2300,14 @@ static void spacemit_update_reg(volatile uint32_t *base, int offset, uint32_t cl
     *reg = regval;
 }
 
+static void spacemit_write_reg(volatile uint32_t *base, int offset, uint32_t value)
+{
+    if (!spacemit_gpio_mapped() || base == NULL || offset < 0)
+        return;
+
+    *(base + (offset >> 2)) = value;
+}
+
 static void spacemit_set_gpio_mode(int pin, int direction)
 {
     int mfpr = spacemit_mfpr_offset(pin);
@@ -2320,7 +2328,7 @@ static void spacemit_set_gpio_mode(int pin, int direction)
     else
         return;
 
-    spacemit_update_reg(spacemit_gpio_map, dir_offset, 0, 1u << shift);
+    spacemit_write_reg(spacemit_gpio_map, dir_offset, 1u << shift);
 }
 
 int spacemit_gpio_function(int pin)
@@ -2373,7 +2381,7 @@ void spacemit_output_gpio(int pin, int value)
         return;
 
     offset = bank + (value == 0 ? spacemit_gpcr_offset() : spacemit_gpsr_offset());
-    spacemit_update_reg(spacemit_gpio_map, offset, 0, 1u << shift);
+    spacemit_write_reg(spacemit_gpio_map, offset, 1u << shift);
 }
 
 int spacemit_input_gpio(int pin)
