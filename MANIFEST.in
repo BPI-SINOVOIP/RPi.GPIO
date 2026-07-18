@@ -1,0 +1,4 @@
+include CHANGELOG.txt
+include LICENCE.txt
+include README.txt
+include source/*.h
