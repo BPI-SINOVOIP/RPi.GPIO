@@ -621,7 +621,7 @@ char *piModelNames [BPI_MODELS_MAX] =
   [BPI_MODEL_M2P_H5]  = "Banana Pi M2+[H5]",
   [BPI_MODEL_M2U_V40] = "Banana Pi M2 Ultra[V40]",
   [BPI_MODEL_M2Z]     = "Banana Pi M2 Zero[H2+/H3]",
-  [BPI_MODEL_R2]      = "Banana Pi R2[MT7623]",
+  [BPI_MODEL_R2]      = "Banana Pi R2[MT7623N]",
   [BPI_MODEL_M2M_V11] = "Banana Pi M2 Magic v1.1[R16]",
   [BPI_MODEL_M4BERRY] = "Banana Pi M4 Berry[H618]",
   [BPI_MODEL_M4ZERO]  = "Banana Pi M4 Zero[H618]",
@@ -861,6 +861,7 @@ struct BPIBoards bpiboard [] =
   { "bananapiai2n", 11901, BPI_MODEL_AI2N, 1, 5, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_AI2N, physToGpio_BPI_AI2N, pinTobcm_BPI_AI2N 	},
   { "banana-pi-ai2n", 11901, BPI_MODEL_AI2N, 1, 5, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_AI2N, physToGpio_BPI_AI2N, pinTobcm_BPI_AI2N 	},
   { "bananapi-ai2n", 11901, BPI_MODEL_AI2N, 1, 5, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_AI2N, physToGpio_BPI_AI2N, pinTobcm_BPI_AI2N 	},
+  { "bpi-ai2n-carrier", 11901, BPI_MODEL_AI2N, 1, 5, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_AI2N, physToGpio_BPI_AI2N, pinTobcm_BPI_AI2N 	},
   { "bpi-r2pro",   12001, BPI_MODEL_R2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2PRO, physToGpio_BPI_R2PRO, pinTobcm_BPI_R2PRO 	},
   { "bpi-r2-pro",  12001, BPI_MODEL_R2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2PRO, physToGpio_BPI_R2PRO, pinTobcm_BPI_R2PRO 	},
   { "bananapir2pro", 12001, BPI_MODEL_R2PRO, 1, 3, BPI_MAKER_SINOVOIP, 0, pinToGpio_BPI_R2PRO, physToGpio_BPI_R2PRO, pinTobcm_BPI_R2PRO 	},
@@ -1405,6 +1406,18 @@ static struct BPIBoards *bpi_find_board_by_model_string(const char *hardware)
       strstr(hardware, "bananapi,bpi-r4-lite") ||
       strstr(hardware, "mt7987a-bananapi-bpi-r4-lite"))
     return bpi_find_board_by_name("bpi-r4-lite");
+
+  /* R4 Mini has no published external raw-GPIO connector.  Keep this
+   * exclusion before the generic R4 substring match below. */
+  if (strstr(hardware, "Bananapi BPI-R4 Mini") ||
+      strstr(hardware, "BananaPi BPI-R4 Mini") ||
+      strstr(hardware, "Banana Pi BPI-R4 Mini") ||
+      strstr(hardware, "BananaPi R4 Mini") ||
+      strstr(hardware, "Banana Pi R4 Mini") ||
+      strstr(hardware, "BPI-R4 Mini") ||
+      strstr(hardware, "bananapi,bpi-r4-mini") ||
+      strstr(hardware, "mt7987a-bananapi-bpi-r4-mini"))
+    return NULL;
 
   if (strstr(hardware, "Bananapi BPI-R4") ||
       strstr(hardware, "BananaPi BPI-R4") ||

@@ -33,6 +33,7 @@ Keep model IDs, detection aliases and shared physical/BCM arrays aligned with BP
 ## Build gate
 
 ```sh
+python3 tools/audit-bpi-support.py --peer ../BPI-WiringPi2
 python3 setup.py build_ext --inplace
 python3 -c 'import RPi.GPIO as GPIO; print(GPIO.VERSION); print(GPIO.RPI_INFO)'
 ```
@@ -40,6 +41,7 @@ python3 -c 'import RPi.GPIO as GPIO; print(GPIO.VERSION); print(GPIO.RPI_INFO)'
 ## Review checklist
 
 - Canonical product name plus aliases are documented.
+- The product row and status in [Complete Board Catalog](Complete-Board-Catalog) are updated.
 - Detection tests include real Device Tree strings.
 - `GPIO.BOARD` power/GND/non-GPIO positions match the exact header.
 - Unsafe pins stay unavailable.

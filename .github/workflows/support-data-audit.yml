@@ -1,0 +1,15 @@
+name: Banana Pi support data audit
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Validate models, detection, pin maps and catalog
+        run: python3 tools/audit-bpi-support.py

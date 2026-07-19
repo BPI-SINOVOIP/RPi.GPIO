@@ -4,6 +4,7 @@
 - [Build and Install](Build-and-Install)
 - [Quick Start](Quick-Start)
 - [Board Support Matrix](Board-Support-Matrix)
+- [Complete Board Catalog](Complete-Board-Catalog)
 - [OpenWrt One GPIO](OpenWrt-One)
 - [K3 Pico-ITX GPIO](K3-Pico-ITX)
 - [Numbering and Detection](Numbering-and-Detection)

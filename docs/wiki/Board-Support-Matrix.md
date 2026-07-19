@@ -18,6 +18,8 @@ Status date: 2026-07-19
 
 The normalized Banana Pi catalog has 110 products: 14 `implemented`, 9 `alias`, 23 `limited`, 6 `carrier-only`, 3 `base-covered`, 11 `blocked`, 9 `deferred`, 1 `needs-review` and 34 `out-of-scope`. Customer-private boards are excluded.
 
+The searchable, product-by-product inventory is maintained on [Complete Board Catalog](Complete-Board-Catalog). This page explains support behavior; the catalog prevents blocked and out-of-scope products from disappearing merely because they have no code path.
+
 ## Code-backed families
 
 The repository contains Banana Pi model paths for these major families:
